@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>セット設定</title>
+<style>
+:root{
+  --nav:#1e2328;
+  --ink:#1d2228;
+  --muted:#6b7280;
+  --line:#dde2e8;
+  --panel:#f6f8fa;
+  --accent:#0aa7c9;
+  --accent-soft:#d5f2f9;
+  --gold:#f9b913;
+  --danger:#d64555;
+  --radius:4px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;color:var(--ink);background:#fff;font-size:14px;line-height:1.5}
+button,input{font:inherit}
+
+/* 上部ナビ */
+.topnav{background:var(--nav);color:#fff;height:48px;display:flex;align-items:center;gap:24px;padding:0 16px;font-size:16px;white-space:nowrap;overflow-x:auto}
+.topnav span{cursor:pointer}
+.topnav .right{margin-left:auto;font-size:13px;opacity:.85}
+
+/* ツールバー */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.btn{border:1px solid #888;background:#fff;color:var(--ink);padding:6px 20px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#f0f2f4}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold)}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:#fff}
+.btn.blue{color:#2563eb;border-color:#93b4f5}
+.btn.dark{background:#6b7280;border-color:#6b7280;color:#fff}
+.btn.small{padding:3px 8px;font-size:12px}
+.tbgroup{display:flex;gap:6px;flex-wrap:wrap}
+
+/* レイアウト */
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 140px)}
+aside{border-right:1px solid var(--line);background:var(--panel);padding:12px}
+aside h2{font-size:20px;margin:18px 0 8px}
+.leasetable{width:100%;border-collapse:collapse;background:#fff}
+.leasetable th,.leasetable td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+.leasetable th{background:#fafbfc;font-weight:600}
+.deptlist{list-style:none;padding:0;margin:0;background:#fff;border:1px solid var(--line)}
+.deptlist li{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;position:relative}
+.deptlist li:last-child{border-bottom:none}
+.deptlist li:hover{background:var(--accent-soft)}
+.deptlist .tip{display:none;position:absolute;left:calc(100% + 8px);top:-6px;min-width:260px;background:#000;border:1px solid #555;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.35);padding:8px 12px;z-index:10;font-size:14px;color:#fff;white-space:nowrap;cursor:default}
+.deptlist li:hover .tip{display:block}
+.deptlist .tip::before{content:"";position:absolute;left:-9px;top:14px;border-width:8px 9px 8px 0;border-style:solid;border-color:transparent #000 transparent transparent}
+.deptlist .tip strong{display:block;margin-bottom:4px;font-size:15px}
+.deptlist .tip div{padding:3px 0}
+
+main{padding:14px 18px}
+.hospital{background:#cdf1f8;color:#0b4a5b;font-size:20px;font-weight:600;padding:10px 16px;border-radius:var(--radius);margin-bottom:14px}
+.hospital small{font-size:14px;font-weight:400;margin-left:12px}
+h1{font-size:24px;margin:4px 0 8px}
+.note{color:var(--muted);font-size:13px;margin-bottom:10px}
+.hidezero-on .qty-empty{display:none}
+
+.set{display:grid;grid-template-columns:200px 1fr;border-top:1px solid var(--line);padding:16px 0}
+.set-side h3{font-size:22px;margin:0 0 8px}
+.set-side input[type=text]{width:100%;padding:6px 8px;border:1px solid #aab;border-radius:var(--radius);margin-bottom:6px}
+.set-body{border:1px solid var(--line);border-radius:var(--radius)}
+.set-head{background:var(--gold);padding:8px 14px;display:flex;align-items:baseline;gap:12px}
+.set-head h2{margin:0;font-size:22px}
+.set-head small{font-size:13px}
+.patterns{padding:12px 14px}
+
+.pattern{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
+.pattern-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pattern-top h4{margin:0;font-size:20px}
+.pattern-top label{color:var(--muted)}
+.pattern-top input.people{width:80px;padding:4px 6px;border:1px solid #889;border-radius:var(--radius);text-align:right}
+.summary{display:flex;justify-content:space-between;align-items:flex-end;margin:10px 0 6px;flex-wrap:wrap;gap:6px}
+.summary .sub{color:var(--muted);font-size:13px}
+.summary .money{font-size:14px}
+.summary .money b{font-size:16px}
+
+table.items{width:100%;border-collapse:collapse;margin-top:6px}
+table.items td{padding:9px 12px;border-top:1px solid var(--line)}
+table.items tr:nth-child(odd){background:#f2f2f2}
+table.items input{width:110px;padding:4px 6px;border:1px solid #889;border-radius:var(--radius);text-align:right}
+table.items .code{color:#374151}
+.pattern-foot{display:flex;justify-content:space-between;margin-top:8px}
+.add-pattern{margin-top:6px}
+
+footer.hint{margin-top:10px;color:var(--muted);font-size:12px}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{border-right:none;border-bottom:1px solid var(--line)}
+  .set{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <span>病院情報検索</span>
+  <span>契約検索 ▾</span>
+  <span>事務用 ▾</span>
+  <span>サイボウズ</span>
+  <span>営業用リンク</span>
+  <span>WEB REPORT</span>
+  <span class="right">フィードバック（感想）を送る</span>
+</header>
+
+<div class="toolbar">
+  <div class="tbgroup">
+    <button class="btn">契約検索</button>
+    <button class="btn">登録一覧</button>
+  </div>
+  <div class="tbgroup">
+    <button class="btn">トップ画面</button>
+    <button class="btn">部署別品番設定</button>
+    <button class="btn primary">セットパターン設定</button>
+  </div>
+  <div class="tbgroup">
+    <button class="btn">病院情報検索</button>
+    <button class="btn gold">コピー</button>
+    <button class="btn gold">登録名修正</button>
+    <button class="btn">更新済</button>
+    <button class="btn danger">削除</button>
+  </div>
+  <div class="tbgroup">
+    <button class="btn blue">単価見積書</button>
+    <button class="btn blue">セット見積書</button>
+    <button class="btn blue">月額総額料金見積書</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside>
+    <a class="btn" style="display:block;text-align:left;text-decoration:none" href="#top">セット上部へ</a>
+
+    <h2>確定リース料金</h2>
+    <table class="leasetable">
+      <tr><th>分類</th><th>リース料金</th></tr>
+      <tr><td>上衣</td><td>160</td></tr>
+      <tr><td>パンツ</td><td>160</td></tr>
+      <tr><td>診察衣</td><td>160</td></tr>
+    </table>
+
+    <h2>部署一覧</h2>
+    <ul class="deptlist" id="deptList"></ul>
+  </aside>
+
+  <main id="top">
+    <div class="hospital">01：00000 ○○病院 <small>（サージカル）</small><small style="margin-left:auto">2026年08月分コピー③</small></div>
+
+    <h1>セット設定</h1>
+    <button class="btn dark" id="toggleZero">貸与枚数空白非表示</button>
+    <span class="note">※セットパターンを削除する場合は、貸与枚数クリア押下後、削除ボタンが表示されます。</span>
+
+    <div id="sets"></div>
+  </main>
+</div>
+
+<script>
+/* ---------- データ ---------- */
+const LEASE = { "上衣": 160, "パンツ": 160, "診察衣": 160 };
+
+const state = {
+  hideZero: false,
+  sets: [
+    {
+      id: "ward", name: "看護",
+      patterns: [
+        { people: 50, items: [
+          { cat: "上衣",  code: "RF5472", qty: 0 },
+          { cat: "上衣",  code: "RF5197", qty: 5 },
+          { cat: "パンツ", code: "AY4213", qty: 0 },
+          { cat: "パンツ", code: "LX4013", qty: 5 }
+        ]},
+        { people: 100, items: [
+          { cat: "上衣",  code: "RF5472", qty: 0 },
+          { cat: "上衣",  code: "RF5197", qty: 8 },
+          { cat: "パンツ", code: "AY4213", qty: 0 },
+          { cat: "パンツ", code: "LX4013", qty: 8 }
+        ]}
+      ]
+    },
+    {
+      id: "ope", name: "OPE看",
+      patterns: [
+        { people: 10, items: [
+          { cat: "診察衣", code: "RF5197", qty: 6 },
+          { cat: "パンツ", code: "LX4013", qty: 3 }
+        ]},
+        { people: 5, items: [
+          { cat: "診察衣", code: "RF5197", qty: 3 },
+          { cat: "横掛", code: "LX4013", qty: 3 },
+          { cat: "ズボン", code: "AY4213", qty: 3 }
+        ]}
+      ]
+    },
+    {
+      id: "assist", name: "助手",
+      patterns: [
+        { people: 0, items: [] }
+      ]
+    }
+  ]
+};
+
+/* ---------- ユーティリティ ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const yen = n => Number(n).toLocaleString("ja-JP");
+
+function calc(pattern) {
+  const cats = {};
+  let total = 0, count = 0;
+  pattern.items.forEach(it => {
+    const q = Number(it.qty) || 0;
+    cats[it.cat] = (cats[it.cat] || 0) + q;
+    total += q * (LEASE[it.cat] || 0);
+    count += q;
+  });
+  const setPrice = total;
+  const monthly = setPrice * (Number(pattern.people) || 0);
+  const catText = Object.entries(cats).map(([k, v]) => `${k}:${v}`).join("　");
+  return { setPrice, monthly, count, catText };
+}
+
+/* ---------- 描画 ---------- */
+function tipLines(set) {
+  return set.patterns.map(p => {
+    const cats = {};
+    p.items.forEach(it => { cats[it.cat] = (cats[it.cat] || 0) + (Number(it.qty) || 0); });
+    const label = Object.entries(cats).filter(([, v]) => v > 0).map(([k, v]) => `${k}${v}枚`).join("・");
+    return `<div>${label ? label + "のセットの人" : "セット未設定"}　${yen(p.people)}名</div>`;
+  }).join("");
+}
+
+function renderDeptList() {
+  document.getElementById("deptList").innerHTML = state.sets
+    .map(s => `<li data-jump="${esc(s.id)}">${esc(s.name)}<div class="tip"><strong>${esc(s.name)}</strong>${tipLines(s)}</div></li>`).join("");
+}
+
+function renderPattern(set, p, pi) {
+  const c = calc(p);
+  const rows = p.items.map((it, ii) => `
+    <tr class="${Number(it.qty) ? "" : "qty-empty"}">
+      <td style="width:120px">${esc(it.cat)}</td>
+      <td class="code" style="width:200px">${esc(it.code)}</td>
+      <td><input type="number" min="0" value="${Number(it.qty) || ""}"
+           data-set="${esc(set.id)}" data-p="${pi}" data-i="${ii}" data-field="qty"></td>
+    </tr>`).join("");
+
+  return `
+  <div class="pattern">
+    <div class="pattern-top">
+      <h4>パターン${pi + 1}</h4>
+      <label>人数:
+        <input class="people" type="number" min="0" value="${p.people}"
+          data-set="${esc(set.id)}" data-p="${pi}" data-field="people">
+      </label>
+    </div>
+
+    <div class="summary">
+      <div>
+        <div class="money">月額セット料金：<b>${yen(c.setPrice)}</b></div>
+        <div class="sub">${c.catText ? esc(c.catText) + "　計:" + c.count : "枚数未入力"}</div>
+      </div>
+      <div class="money">月額料金：<b>${yen(c.monthly)}</b></div>
+      <button class="btn danger small" data-action="clear"
+        data-set="${esc(set.id)}" data-p="${pi}">貸与枚数クリア</button>
+    </div>
+
+    <table class="items">${rows || `<tr><td class="note">品番が登録されていません</td></tr>`}</table>
+  </div>`;
+}
+
+function renderSets() {
+  const html = state.sets.map(set => `
+    <section class="set" id="set-${esc(set.id)}">
+      <div class="set-side">
+        <h3>${esc(set.name)}</h3>
+        <input type="text" placeholder="セット設定名" data-newname="${esc(set.id)}">
+        <button class="btn" data-action="create">セット作成</button>
+      </div>
+      <div class="set-body">
+        <div class="set-head">
+          <h2>${esc(set.name)}セット</h2>
+          <small>編集</small>
+        </div>
+        <div class="patterns">
+          ${set.patterns.map((p, pi) => renderPattern(set, p, pi)).join("")}
+          <button class="btn blue small add-pattern" data-action="addpattern" data-set="${esc(set.id)}">パターン ⊕</button>
+        </div>
+      </div>
+    </section>`).join("");
+
+  document.getElementById("sets").innerHTML = html;
+  document.querySelector("main").classList.toggle("hidezero-on", state.hideZero);
+}
+
+function renderAll() {
+  renderDeptList();
+  renderSets();
+}
+
+/* ---------- イベント ---------- */
+document.getElementById("sets").addEventListener("input", e => {
+  const el = e.target;
+  if (!el.dataset.field) return;
+  const set = state.sets.find(s => s.id === el.dataset.set);
+  const p = set.patterns[Number(el.dataset.p)];
+  if (el.dataset.field === "people") {
+    p.people = Number(el.value) || 0;
+  } else {
+    p.items[Number(el.dataset.i)].qty = Number(el.value) || 0;
+  }
+  renderSets();
+  // 入力中のフォーカスを維持
+  const again = document.querySelector(
+    `input[data-set="${el.dataset.set}"][data-p="${el.dataset.p}"][data-field="${el.dataset.field}"]` +
+    (el.dataset.i !== undefined ? `[data-i="${el.dataset.i}"]` : "")
+  );
+  if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
+});
+
+document.getElementById("sets").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const set = state.sets.find(s => s.id === btn.dataset.set);
+
+  if (action === "clear") {
+    set.patterns[Number(btn.dataset.p)].items.forEach(it => it.qty = 0);
+    renderSets();
+  }
+  if (action === "addpattern") {
+    set.patterns.push({ people: 0, items: [] });
+    renderSets();
+  }
+  if (action === "create") {
+    const input = document.querySelector(`input[data-newname="${btn.closest(".set").id.replace("set-", "")}"]`);
+    const name = (input && input.value.trim()) || "";
+    if (!name) { alert("セット設定名を入力してください。"); return; }
+    const id = "custom" + Date.now();
+    state.sets.push({ id, name, patterns: [{ people: 0, items: [] }] });
+    renderAll();
+  }
+});
+
+document.getElementById("toggleZero").addEventListener("click", e => {
+  state.hideZero = !state.hideZero;
+  e.target.textContent = state.hideZero ? "貸与枚数空白表示" : "貸与枚数空白非表示";
+  renderSets();
+});
+
+document.getElementById("deptList").addEventListener("click", e => {
+  const li = e.target.closest("li[data-jump]");
+  if (li) document.getElementById("set-" + li.dataset.jump)
+    .scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+renderAll();
+</script>
+</body>
+</html>
