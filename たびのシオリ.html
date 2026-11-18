@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>しおり</title>
+<style>
+:root{
+  --primary:#F3836A; --primary-dark:#CF6250; --primary-soft:#FCE9E4; --on-primary:#FFFFFF;
+  --bg:#FFFFFF; --card:#FFFFFF; --ink:#17302E; --muted:#6E8582; --line:#DCEBE8;
+  --surface:#FFFFFF; --sub-bg:#F5FBFA; --gray-btn:#EEF1F6; --hero1:#2A4E9E; --hero2:#3A66C9; --hero3:#6A93E0; --page:#EAF5F3; --overlay:rgba(20,32,56,.4);
+  --danger:#D9434F; --ok:#4F6A9A;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --primary:#F7998A; --primary-dark:#FFB9AB; --primary-soft:#3D2A26; --on-primary:#FFFFFF;
+    --bg:#15171C; --card:#22252C; --ink:#F2F2F2; --muted:#9A9EA8; --line:#34373F;
+    --surface:#22252C; --sub-bg:#1A1C22; --gray-btn:#2C2F37; --hero1:#FFC91F; --hero2:#FFC91F; --hero3:#FFC91F; --page:#101114; --overlay:rgba(0,0,0,.6);
+    --danger:#F0707A; --ok:#7F97C7;
+  }
+}
+:root[data-theme="dark"]{
+  --primary:#F7998A; --primary-dark:#FFB9AB; --primary-soft:#3D2A26; --on-primary:#FFFFFF;
+  --bg:#15171C; --card:#22252C; --ink:#F2F2F2; --muted:#9A9EA8; --line:#34373F;
+  --surface:#22252C; --sub-bg:#1A1C22; --gray-btn:#2C2F37; --hero1:#FFC91F; --hero2:#FFC91F; --hero3:#FFC91F; --page:#101114; --overlay:rgba(0,0,0,.6);
+  --danger:#F0707A; --ok:#7F97C7;
+}
+.theme-wrap{display:flex;align-items:center;gap:10px}
+.header-hero .add-btn{position:absolute;right:20px;top:50%;transform:translateY(-50%)}
+.add-btn::before,.add-btn::after{content:'';position:absolute;left:50%;top:50%;background:var(--primary);border-radius:2px;transform:translate(-50%,-50%)}
+.add-btn::before{width:18px;height:3px}
+.add-btn::after{width:3px;height:18px}
+.theme-tmp,.accent-tmp{background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:10px 14px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(20,32,56,.12)}
+.tools{position:fixed;bottom:22px;left:max(16px,calc(50% - 199px));z-index:20;display:flex;gap:8px}
+:root[data-accent="aqua"]{--primary:#40BDA8; --primary-dark:#22958A; --primary-soft:#E0F5F1; --on-primary:#FFFFFF;}
+@media (prefers-color-scheme: dark){
+  :root[data-accent="aqua"]:not([data-theme="light"]){--primary:#66D6C2; --primary-dark:#A0EBDD; --primary-soft:#163D39; --on-primary:#FFFFFF;}
+}
+:root[data-accent="aqua"][data-theme="dark"]{--primary:#66D6C2; --primary-dark:#A0EBDD; --primary-soft:#163D39; --on-primary:#FFFFFF;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  color:var(--ink);font-size:15px;line-height:1.6;background:var(--page);
+  display:flex;justify-content:center;
+}
+#app{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+img{display:block}
+
+/* header */
+.header{background:var(--primary);color:#FFFFFF;padding:20px 20px 18px;display:flex;align-items:center;gap:12px;min-height:64px}
+.header h1{font-size:18px;font-weight:700;flex:1}
+.header .eyebrow{font-size:12px;opacity:.8;letter-spacing:.06em}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#FFFFFF;flex-shrink:0}
+.icon-btn:active{background:rgba(255,255,255,.15)}
+.header-hero{padding:24px 20px 20px;border-radius:0 0 24px 24px;display:flex;align-items:center;justify-content:center;position:relative;text-align:center;background:var(--primary);color:#FFFFFF;text-shadow:none}
+.header-hero h1{font-size:22px;font-weight:700}
+.header-hero .eyebrow{font-size:12px;opacity:.8;letter-spacing:.08em;margin-bottom:2px}
+.add-btn{background:var(--surface);color:var(--primary);width:44px;height:44px;border-radius:50%;font-size:0;position:relative;display:flex;align-items:center;justify-content:center}
+
+.pad{padding:16px 16px 40px}
+.pb{padding-bottom:110px}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;line-height:1.9}
+
+/* trip cards */
+.tcard{background:var(--card);border-radius:14px;overflow:hidden;margin-bottom:14px;cursor:pointer;border:1px solid var(--line)}
+.tcard:active{background:var(--sub-bg)}
+.tcard-img{position:relative;height:140px}
+.tcard-body{padding:12px 16px 16px}
+.tcard-body h3{font-size:17px;font-weight:700;margin-bottom:2px}
+.date{color:var(--muted);font-size:13px}
+.avatars{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.av{padding:4px 12px;border-radius:999px;background:var(--primary-soft);color:var(--primary-dark);font-weight:700;font-size:12px;white-space:nowrap}
+
+.pill{position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:#fff;color:var(--primary-dark);transform:rotate(-4deg);box-shadow:0 2px 0 rgba(47,111,222,.25)}
+.pill.now{background:var(--primary);color:var(--on-primary)}
+.pill.past{background:#8A96A8;color:#fff}
+.cal-badge{position:absolute;top:12px;right:12px;width:78px;background:var(--surface);border-radius:10px;box-shadow:0 4px 10px rgba(20,32,56,.18);text-align:center;color:var(--ink);z-index:2}
+.cb-top{position:relative;height:20px;background:var(--primary);border-radius:10px 10px 0 0}
+.cb-top::before,.cb-top::after{content:'';position:absolute;top:-8px;width:6px;height:14px;border:3px solid #8A96A8;border-radius:4px;background:var(--surface)}
+.cb-top::before{left:16px}
+.cb-top::after{right:16px}
+.cb-body{position:relative;padding:4px 0 10px}
+.cb-body small{display:block;font-size:10px;font-weight:700;color:var(--primary-dark);line-height:1.2}
+.cb-body b{display:block;font-size:32px;font-weight:900;line-height:1.05}
+.cb-body span{font-size:11px;font-weight:700}
+.cb-body .txt{display:block;font-size:14px;padding-top:8px;line-height:1.3}
+.cb-body::after{content:'';position:absolute;left:0;bottom:0;width:14px;height:14px;background:none;border-radius:0 0 0 10px}
+.cal-badge.past .cb-top{background:#9AA5B4}
+.cal-badge.past .cb-body .txt{color:#8A96A8}
+.cal-badge.now .cb-top{background:var(--primary-dark)}
+
+.thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--primary-soft);color:var(--primary);font-size:34px;font-weight:700}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb.sm{width:64px;height:64px;flex-shrink:0;border-radius:10px;font-size:22px}
+
+.btn-block{width:100%;padding:14px 24px;border-radius:999px;font-weight:700;font-size:15px;margin-top:8px}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-primary:active{background:var(--primary-dark)}
+.btn-outline{background:var(--surface);color:var(--ink);border:1px solid var(--primary)}
+.btn-ghost{background:var(--gray-btn);color:var(--ink);margin-top:10px}
+.btn-past{display:block;margin:12px auto 0;padding:7px 16px;border-radius:999px;background:var(--gray-btn);color:var(--muted);font-size:12px;font-weight:700}
+.btn-danger{background:none;color:var(--danger);border:1px solid var(--danger);margin-top:10px}
+
+/* trip detail */
+.trip-head{background:var(--primary);color:#FFFFFF;padding:14px 16px 20px}
+.trip-head .top{display:flex;align-items:center;gap:8px}
+.trip-head h1{font-size:19px;font-weight:700;line-height:1.3}
+.trip-head p{margin-top:6px;font-size:13px;opacity:.9;padding-left:48px}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.tabs button{flex:1;padding:14px 0;color:var(--muted);font-weight:700;font-size:14px;border-bottom:3px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--primary)}
+
+.day{margin-bottom:16px;background:var(--card);border-radius:14px;border:1px solid var(--line);overflow:hidden}
+.dayhead{display:flex;gap:10px;align-items:center;font-weight:700;font-size:15px;padding:12px 16px;background:none;border-bottom:1px solid var(--line);color:var(--ink)}
+.dbadge{background:var(--primary);color:var(--on-primary);padding:2px 10px;border-radius:6px;font-size:13px}
+.none{color:var(--muted);font-size:13px;padding:14px 16px}
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);padding:14px 16px;border-top:1px solid var(--line);cursor:pointer}
+.item:active{background:var(--sub-bg)}
+.tcol{width:78px;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;padding-top:1px}
+.t1{font-size:17px;font-weight:700;color:var(--primary-dark);line-height:1.2}
+.t1.muted{color:#B5C0CC}
+.t2{font-size:12px;color:var(--muted);font-weight:700;margin-top:3px}
+.item:nth-child(3n+1){border-left-color:#FF6FA3}
+.item:nth-child(3n+2){border-left-color:#FFC93C}
+.item:nth-child(3n){border-left-color:#2BA36E}
+.ibody{flex:1;min-width:0}
+.ibody b{font-size:15px;font-weight:700;word-break:break-all}
+.ibody small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;word-break:break-all}
+.memo{padding:0;font-size:13px;margin-top:6px;white-space:pre-wrap;color:var(--ink)}
+.ic{position:relative;display:block;margin:0;padding:0}
+.ic svg{position:absolute;left:-26px;top:50%;transform:translateY(-50%);width:18px;height:18px;display:block;color:var(--primary-dark);margin:0}
+.ibody small.ic{display:block;font-size:14px;color:var(--ink);margin-top:4px}
+.memo.ic svg{top:3px;transform:none}
+.ibody small.ic svg{margin-top:0}
+.costtag{display:inline-block;margin-top:0;flex-shrink:0;white-space:nowrap;color:var(--primary-dark);font-weight:700;padding:2px 0;border-radius:6px;font-size:12.5px}
+.titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.titlerow b{min-width:0}
+
+.fab{position:fixed;bottom:22px;right:max(16px,calc(50% - 199px));z-index:20;background:var(--primary);color:var(--on-primary);padding:14px 20px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:0 4px 14px rgba(47,111,222,.3)}
+.fab:active{background:var(--primary-dark)}
+
+/* warikan */
+.total{display:flex;align-items:baseline;gap:10px;width:max-content;margin:0 16px 14px auto;border-bottom:1px solid #C5CED8;padding:14px 0 4px;font-weight:700}
+.total span{font-size:12px;color:var(--muted);font-weight:700}
+.total b{font-size:21px;color:var(--ink)}
+.wcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.wcard:active{background:var(--sub-bg)}
+.wtop{display:flex;justify-content:space-between;align-items:center}
+.wdate{color:var(--muted);font-size:13px;font-weight:700}
+.wamt{font-size:18px;font-weight:700;color:var(--ink)}
+.wtitle{font-weight:700;font-size:15px;margin:6px 0 4px}
+.wmeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-size:12.5px;color:var(--muted)}
+.wnames{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.nm{background:var(--primary-soft);color:var(--primary-dark);padding:2px 9px;border-radius:6px;font-size:12px;font-weight:700}
+
+/* sheet */
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:50;display:flex;justify-content:center;align-items:flex-end;animation:fade .2s ease}
+.sheet{width:100%;max-width:430px;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:10px 20px calc(28px + env(safe-area-inset-bottom,0px));animation:up .25s ease}
+.grip{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 12px}
+.sheet h2{font-size:18px;font-weight:700;margin-bottom:14px}
+.sheet h3{font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--muted)}
+.sub2{color:var(--muted);font-size:13px;margin:-8px 0 6px}
+.bigamt{font-size:30px;font-weight:700;color:var(--ink);text-align:center;margin:8px 0 14px}
+.info{display:flex;justify-content:space-between;padding:12px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.info b{font-weight:700}
+.dt-head h2{margin-bottom:4px}
+.dt-date{font-size:16px;color:var(--muted);font-weight:700;margin-bottom:12px}
+.dt-times{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dt-box{flex:1;border:none;border-radius:12px;padding:10px 12px;background:var(--surface)}
+.dt-box small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.dt-box b{font-size:20px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.dt-sub{display:block;font-size:13px;color:var(--ink);font-weight:700;margin-top:2px}
+.dt-arrow{font-size:14px;color:var(--muted);text-align:center;min-width:24px}
+.dt-row{background:var(--surface);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.dt-row small{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:2px}
+.dt-row .val{font-size:15px;white-space:pre-wrap;word-break:break-all}
+.dt-row .unset{font-size:15px;color:#B5C0CC}
+.dt-thumb{width:100%;height:150px;border-radius:10px;overflow:hidden;margin-top:4px}
+.dt-row a{display:block;font-size:15px;color:var(--primary);text-decoration:underline;white-space:pre-wrap;word-break:break-all}
+.dt-map{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:var(--primary)}
+.pills{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.pills+.pills{margin-top:6px}
+.pill-lbl{font-size:12px;color:var(--muted);font-weight:700;margin-right:4px;min-width:40px}
+.pm{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--primary-soft);color:var(--primary-dark);font-size:13px;font-weight:700}
+.pm.payer{background:var(--primary);color:var(--on-primary)}
+.settle-row{display:flex;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.settle-row b{margin-left:auto;font-size:16px;color:var(--ink)}
+.sarrow{color:var(--muted);font-weight:700}
+.sat{color:#2F6FDE}
+.hol{color:#D9434F}
+.dt-thumb img{width:100%;height:100%;object-fit:cover}
+.overlay.full{align-items:stretch;justify-content:center;background:var(--page);padding:0}
+.fullpage{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:var(--page)}
+.fp-body{flex:1;overflow-y:auto;padding:16px 16px 20px}
+.fp-body h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.fp-foot{padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface)}
+.fp-foot .btn-block{margin-top:0}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field>span{font-weight:700;font-size:12.5px;color:var(--muted)}
+.field input,.field select,.field textarea,.prow input,.addrow input{
+  width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px;color:var(--ink);outline:none
+}
+.field input:focus,.field select:focus,.field textarea:focus,.prow input:focus,.addrow input:focus{border-color:var(--primary)}
+.field textarea{min-height:80px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.date-btn{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px;color:var(--ink);text-align:left;font-weight:700}
+.date-btn.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.cal{border:1px solid var(--line);border-radius:14px;padding:12px;margin:-4px 0 14px;background:var(--surface)}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:15px}
+.cal-nav{width:32px;height:32px;border-radius:50%;background:var(--gray-btn);font-size:18px;color:var(--ink)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-wd{font-size:11px;color:var(--muted);padding:4px 0}
+.cal-day{aspect-ratio:1;border-radius:50%;font-size:14px;color:var(--ink);background:none;font-weight:500}
+.cal-day.today{color:var(--ink);font-weight:700}
+.cal-day.in{background:var(--primary-soft);border-radius:0}
+.cal-day.start,.cal-day.end{background:var(--primary);color:var(--on-primary);font-weight:700}
+.overlay.cal-layer{align-items:center;padding:20px}
+.cal-pop{width:100%;max-width:360px;background:var(--surface);border-radius:20px;padding:16px;box-shadow:0 20px 40px rgba(20,32,56,.25)}
+.cal-pop .cal{border:none;margin:0;padding:0}
+.cal-pop .btn-block{margin-top:12px}
+.cal-layer:not(.static) .cal-pop{animation:pop .22s ease}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+
+.thumb-pick{display:flex;align-items:center;justify-content:center;height:130px;border-radius:10px;border:1px dashed var(--line);background:var(--sub-bg);overflow:hidden;cursor:pointer;color:var(--primary);font-weight:700;font-size:14px}
+.thumb-pick img{width:100%;height:100%;object-fit:cover}
+.thumb-pick.sm{height:110px}
+
+.addrow{display:flex;gap:8px}
+.addrow input{flex:1}
+.chip-btn{background:var(--primary);color:var(--on-primary);border-radius:999px;padding:0 18px;font-weight:700;min-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chips small{color:var(--muted)}
+.chip{background:var(--primary-soft);color:var(--primary-dark);padding:4px 6px 4px 12px;border-radius:999px;font-weight:700;font-size:13px}
+.chip b{cursor:pointer;padding:0 6px;font-size:15px}
+
+.costbox{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sub-bg)}
+.switch-row{display:flex;justify-content:space-between;align-items:center;font-weight:700;gap:10px;font-size:14px}
+.switch-row input{width:20px;height:20px;accent-color:var(--primary);flex-shrink:0}
+.switch-row.small{font-size:13px;margin:4px 0 10px;font-weight:700}
+.hint{color:var(--muted);font-size:12px;margin-bottom:10px}
+.prow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.prow span{width:96px;font-weight:700;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.prow input{text-align:right;padding:8px 10px}
+.prow.view{justify-content:space-between}
+.prow.view span{width:auto}
+.sumrow{text-align:right;color:var(--muted);margin-top:4px;font-size:13px}
+.sumrow b{color:var(--ink);font-size:15px}
+.tlist{display:flex;flex-wrap:wrap;gap:8px}
+.tgl{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;color:var(--muted);font-size:13px}
+.tgl.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;padding:8px 0;border-radius:999px;font-size:13px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--primary);color:var(--on-primary)}
+.err{color:var(--danger);font-weight:700;font-size:13px;min-height:1.2em;margin-bottom:6px}
+
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.overlay.static,.overlay.static .sheet{animation:none}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+
+<script>
+const KEY = 'shiori-app-v1';
+const WD = ['日','月','火','水','木','金','土'];
+const MEMBER_COLORS = ['#2F6FDE','#1E4FB0','#4C8BF5','#5B7FBF','#3A6EA5','#7A9CD6'];
+const PALETTE = ['#12998A','#1BAFC4','#3FB8AC','#0E7F74','#2FA9C0'];
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const yen = n => '¥' + Number(n || 0).toLocaleString('ja-JP');
+const pad = n => String(n).padStart(2, '0');
+const toStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fmtD = s => { const d = parse(s); return `${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`; };
+const fmtRange = (a,b) => { const d = parse(a); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} 〜 ${fmtD(b)}`; };
+const todayStr = () => toStr(new Date());
+const diffDays = (a,b) => Math.round((parse(b) - parse(a)) / 864e5);
+function dateRange(a,b){
+  const out = []; const n = diffDays(a,b);
+  for (let i = 0; i <= n; i++){ const d = parse(a); d.setDate(d.getDate()+i); out.push(toStr(d)); }
+  return out;
+}
+const thumb = (src, title, cls='') => src
+  ? `<div class="thumb ${cls}"><img src="${src}" alt=""></div>`
+  : `<div class="thumb ${cls}" style="background:var(--primary);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.15)">${esc((title||'').slice(0,1)) || '旅'}</div>`;
+
+function tripStatus(t){
+  const today = todayStr();
+  if (t.end < today) return { kind:'past' };
+  if (t.start > today) return { kind:'up', days: diffDays(today, t.start) };
+  return { kind:'now' };
+}
+const mname = (t, id) => (t.members.find(m => m.id === id) || {}).name || '不明';
+const currentTrip = () => db.trips.find(t => t.id === ui.tripId);
+
+/* 負担額：均等割り（端数は先頭から1円ずつ）／こだわりは入力値そのまま */
+function shares(cost){
+  if (!cost) return {};
+  if (cost.mode === 'custom'){
+    const r = {};
+    for (const [k,v] of Object.entries(cost.custom || {})) if (Number(v) > 0) r[k] = Number(v);
+    return r;
+  }
+  const ts = cost.targets || [];
+  if (!ts.length) return {};
+  const base = Math.floor(cost.amount / ts.length);
+  let rem = cost.amount - base * ts.length;
+  const r = {};
+  ts.forEach(id => { r[id] = base + (rem > 0 ? 1 : 0); if (rem > 0) rem--; });
+  return r;
+}
+const sumCustom = () => Object.values(ui.draft?.custom || {}).reduce((s,v) => s + (Number(v) || 0), 0);
+
+/* ---------- 保存 ---------- */
+function seed(){
+  const m = [{id:'m1', name:'たろう'}, {id:'m2', name:'はなこ'}, {id:'m3', name:'けんじ'}];
+  const ids = m.map(x => x.id);
+  return { trips: [
+    { id:'t1', title:'宮古島 夏旅', start:'2025-07-11', end:'2025-07-14', thumb:'', members:m, items:[
+      { id:uid(), date:'2025-07-11', title:'レンブラントスタイル那覇', address:'沖縄県那覇市', phone:'', memo:'チェックイン 20:00', thumb:'',
+        cost:{ amount:36000, payerId:'m1', mode:'even', targets:ids, custom:{} } },
+      { id:uid(), date:'2025-07-12', title:'いなまるレンタカー', address:'', phone:'', memo:'09:00 集合', thumb:'',
+        cost:{ amount:24000, payerId:'m2', mode:'even', targets:ids, custom:{} } },
+      { id:uid(), date:'2025-07-12', title:'与那覇前浜ビーチ', address:'', phone:'', memo:'', thumb:'', cost:null }
+    ]},
+    { id:'t2', title:'箱根 温泉旅行', start:'2026-12-19', end:'2026-12-21', thumb:'', members:m, items:[
+      { id:uid(), date:'2026-12-19', title:'新宿 → 箱根湯本', address:'', phone:'', memo:'特急ロマンスカー', thumb:'',
+        cost:{ amount:9000, payerId:'m3', mode:'custom', targets:[], custom:{ m1:3000, m2:3000, m3:3000 } } }
+    ]}
+  ]};
+}
+function loadDb(){
+  try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch(e){}
+  return seed();
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){} }
+
+let db = loadDb();
+let ui = { view:'home', tripId:null, tab:'schedule', from:'home', draft:null, tripDraft:null, modal:null, err:'' };
+const emptyTripDraft = () => ({ title:'', start:todayStr(), end:todayStr(), thumb:'', members:[] });
+
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const s = Math.min(1, 640 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = reject;
+      img.src = r.result;
+    };
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------- 画面 ---------- */
+function tripCard(t){
+  const s = tripStatus(t);
+  const badge = s.kind === 'up' ? `あと${s.days}日` : s.kind === 'now' ? '旅行中' : '終了';
+  return `
+  <article class="tcard" data-action="open-trip" data-id="${t.id}" data-from="${ui.view}">
+    <div class="tcard-img">
+      ${thumb(t.thumb, t.title)}
+      <div class="cal-badge ${s.kind}"><div class="cb-top"></div><div class="cb-body">${s.kind === 'up' ? `<small>あと</small><b>${s.days}</b><span>日</span>` : `<b class="txt">${s.kind === 'now' ? '旅行中' : '終了'}</b>`}</div></div>
+    </div>
+    <div class="tcard-body">
+      <h3>${esc(t.title)}</h3>
+      <p class="date">${fmtRange(t.start, t.end)}</p>
+      <div class="avatars">
+        ${t.members.map(m => `<span class="av">${esc(m.name)}</span>`).join('')}
+      </div>
+    </div>
+  </article>`;
+}
+
+function viewHome(){
+  const up = db.trips.filter(t => tripStatus(t).kind !== 'past').sort((a,b) => a.start.localeCompare(b.start));
+  return `
+  <header class="header-hero">
+    <div>
+      <h1>これからの旅行</h1>
+    </div>
+    <button class="add-btn" data-action="go-create" aria-label="しおりを作成">+</button>
+  </header>
+  <main class="pad">
+    ${up.length ? up.map(tripCard).join('') : `<div class="empty">予定されている旅行はありません<br>右上の ＋ から作成できます</div>`}
+    <button class="btn-past" data-action="go-past">過去のしおりはこちら</button>
+    <div class="tools"><button class="theme-tmp" data-action="toggle-theme">テーマ切替</button><button class="accent-tmp" data-action="toggle-accent">テーマ色</button></div>
+  </main>`;
+}
+
+function viewPast(){
+  const past = db.trips.filter(t => tripStatus(t).kind === 'past').sort((a,b) => b.start.localeCompare(a.start));
+  return `
+  <header class="header">
+    <button class="icon-btn" data-action="go-home" aria-label="戻る">‹</button>
+    <h1>過去のしおり</h1>
+  </header>
+  <main class="pad">
+    ${past.length ? past.map(tripCard).join('') : `<div class="empty">過去のしおりはまだありません</div>`}
+  </main>`;
+}
+
+const ymd = s => { const x = parse(s); return `${x.getFullYear()}.${x.getMonth()+1}.${x.getDate()}`; };
+function calendarHtml(){
+  const [y,m] = ui.calMonth.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < new Date(y, m-1, 1).getDay(); i++) cells.push('');
+  for (let i = 1; i <= days; i++) cells.push(`${y}-${pad(m)}-${pad(i)}`);
+  const d = ui.tripDraft;
+  const today = todayStr();
+  return `
+  <div class="cal">
+    <div class="cal-head">
+      <button type="button" class="cal-nav" data-action="cal-move" data-delta="-1">‹</button>
+      <b>${y}年${m}月</b>
+      <button type="button" class="cal-nav" data-action="cal-move" data-delta="1">›</button>
+    </div>
+    <div class="cal-grid">
+      ${WD.map(w => `<span class="cal-wd">${w}</span>`).join('')}
+      ${cells.map(c => c ? `<button type="button" class="cal-day ${c===d.start?'start':''} ${c===d.end?'end':''} ${(c>d.start && c<d.end)?'in':''} ${c===today?'today':''}" data-action="cal-pick" data-date="${c}">${parse(c).getDate()}</button>` : '<span></span>').join('')}
+    </div>
+    <button type="button" class="btn-block btn-primary" data-action="cal-close">完了</button>
+  </div>`;
+}
+function createSheet(){
+  const d = ui.tripDraft;
+  return `
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>しおりを作成</h2>
+    <label class="field"><span>タイトル</span>
+      <input data-tdraft="title" value="${esc(d.title)}" placeholder="例：箱根温泉旅行">
+    </label>
+    <div class="row2">
+      <div class="field"><span>出発日</span><button type="button" class="date-btn ${ui.cal==='start'?'on':''}" data-action="open-cal" data-target="start">${ymd(d.start)}</button></div>
+      <div class="field"><span>帰着日</span><button type="button" class="date-btn ${ui.cal==='end'?'on':''}" data-action="open-cal" data-target="end">${ymd(d.end)}</button></div>
+    </div>
+    <div class="field"><span>サムネイル画像</span>
+      <label class="thumb-pick">
+        ${d.thumb ? `<img src="${d.thumb}" alt="">` : `<span>画像を選択</span>`}
+        <input type="file" accept="image/*" data-file="tthumb" hidden>
+      </label>
+    </div>
+    <div class="field"><span>メンバー</span>
+      <div class="addrow">
+        <input id="newMember" placeholder="名前を入力">
+        <button class="chip-btn" data-action="add-member">追加</button>
+      </div>
+      <div class="chips">
+        ${d.members.map(m => `<span class="chip">${esc(m.name)} <b data-action="remove-member" data-id="${m.id}">×</b></span>`).join('') || '<small>メンバーを追加してください</small>'}
+      </div>
+    </div>
+    <div class="err">${esc(ui.err)}</div>
+    <button class="btn-block btn-primary" data-action="save-trip">しおりを作成</button>
+    <button class="btn-block btn-ghost" data-action="close-modal">キャンセル</button>
+  </div>`;
+}
+
+const ICON = {
+  pin: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  tel: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+  memo: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12l-4 4H4z"/><path d="M8 9h8M8 13h5"/></svg>'
+};
+function timeCol(x){
+  if (!x.startTime) return '<span class="t1 muted">--:--</span>';
+  return `<span class="t1">${x.startTime}</span>${x.endTime ? `<span class="t2">- ${x.endTime}</span>` : ''}`;
+}
+function itemCard(x){
+  return `
+  <div class="item" data-action="edit-item" data-id="${x.id}">
+    <div class="tcol">${timeCol(x)}</div>
+    <div class="ibody">
+      <div class="titlerow"><b>${esc(x.title)}</b>${x.cost ? `<span class="costtag">${yen(x.cost.amount)}</span>` : ''}</div>
+    </div>
+    ${x.thumb ? thumb(x.thumb, x.title, 'sm') : ''}
+  </div>`;
+}
+
+function viewWarikan(t){
+  const items = t.items.filter(x => x.cost).sort((a,b) => a.date.localeCompare(b.date));
+  if (!items.length) return `<div class="empty">費用の登録されたスケジュールはまだありません</div>`;
+  const total = items.reduce((s,x) => s + x.cost.amount, 0);
+  return `
+  ${items.map(x => {
+    const sh = shares(x.cost);
+    const names = Object.keys(sh).map(id => mname(t, id));
+    return `
+    <div class="wcard" data-action="open-cost" data-id="${x.id}">
+      <div class="wtop"><span class="wdate">${fmtD(x.date)}</span><span class="wamt">${yen(x.cost.amount)}</span></div>
+      <div class="wtitle">${esc(x.title)}</div>
+      <div class="wmeta">
+        <span>支払い：${esc(mname(t, x.cost.payerId))}</span>
+        <span>${names.length}人${x.cost.mode==='custom'?'（個別入力）':'で割り勘'}</span>
+      </div>
+      <div class="wnames">${names.map(n => `<span class="nm">${esc(n)}</span>`).join('')}</div>
+    </div>`;
+  }).join('')}
+  <div class="total"><span>合計</span><b>${yen(total)}</b></div>
+  <button class="btn-block btn-outline" data-action="open-settle" style="margin-top:14px">返金を確認</button>`;
+}
+
+const HOLIDAYS = new Set([
+  '2025-01-01','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20','2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21','2025-08-11','2025-09-15','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24',
+  '2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23'
+]);
+function dayClass(s){
+  if (HOLIDAYS.has(s)) return 'hol';
+  const w = parse(s).getDay();
+  return w === 0 ? 'hol' : w === 6 ? 'sat' : '';
+}
+function viewTrip(){
+  const t = currentTrip();
+  if (!t){ ui.view = 'home'; return viewHome(); }
+  const days = dateRange(t.start, t.end);
+  const body = ui.tab === 'schedule'
+    ? days.map((d,i) => `
+      <section class="day">
+        <div class="dayhead"><span class="dbadge">${i+1}日目</span><span class="${dayClass(d)}">${fmtD(d)}</span></div>
+        ${t.items.filter(x => x.date === d).sort((a,b) => (a.startTime || '99:99').localeCompare(b.startTime || '99:99')).map(itemCard).join('') || '<p class="none">予定はまだありません</p>'}
+      </section>`).join('') + `<button class="fab" data-action="new-schedule">＋ スケジュールを作成</button>`
+    : viewWarikan(t);
+  return `
+  <header class="trip-head">
+    <div class="top">
+      <button class="icon-btn" data-action="back" aria-label="戻る">‹</button>
+      <h1>${esc(t.title)}</h1>
+    </div>
+    <p>${fmtRange(t.start, t.end)}　${t.members.length}人</p>
+  </header>
+  <nav class="tabs">
+    <button class="${ui.tab==='schedule'?'on':''}" data-action="tab" data-tab="schedule">スケジュール</button>
+    <button class="${ui.tab==='warikan'?'on':''}" data-action="tab" data-tab="warikan">わりかん</button>
+  </nav>
+  <main class="pad pb">${body}</main>`;
+}
+
+/* ---------- モーダル ---------- */
+function scheduleForm(){
+  const t = currentTrip(); const d = ui.draft;
+  const days = dateRange(t.start, t.end);
+  return `
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>${d.id ? 'スケジュールを編集' : 'スケジュールを作成'}</h2>
+
+    <label class="field"><span>日付</span>
+      <select data-draft="date">
+        ${days.map((x,i) => `<option value="${x}" ${x===d.date?'selected':''}>${i+1}日目　${fmtD(x)}</option>`).join('')}
+      </select>
+    </label>
+    <div class="row2">
+      <label class="field"><span>開始時間</span><input type="time" data-draft="startTime" value="${d.startTime || ''}"></label>
+      <label class="field"><span>終了時間</span><input type="time" data-draft="endTime" value="${d.endTime || ''}"></label>
+    </div>
+    <label class="field"><span>タイトル（必須）</span>
+      <input data-draft="title" value="${esc(d.title)}" placeholder="例：いなまるレンタカー">
+    </label>
+    <label class="field"><span>住所</span>
+      <input data-draft="address" value="${esc(d.address)}">
+    </label>
+    <label class="field"><span>電話番号</span>
+      <input type="tel" data-draft="phone" value="${esc(d.phone)}">
+    </label>
+    <label class="field"><span>メモ</span>
+      <textarea data-draft="memo">${esc(d.memo)}</textarea>
+    </label>
+    <div class="field"><span>サムネイル画像</span>
+      <label class="thumb-pick sm">
+        ${d.thumb ? `<img src="${d.thumb}" alt="">` : `<span>画像を選択</span>`}
+        <input type="file" accept="image/*" data-file="thumb" hidden>
+      </label>
+    </div>
+
+    <div class="costbox">
+      <label class="switch-row"><span>費用を登録する</span>
+        <input type="checkbox" data-toggle="cost" ${d.hasCost?'checked':''}>
+      </label>
+      ${d.hasCost ? `
+        <div style="height:12px"></div>
+        <label class="field"><span>支払った人</span>
+          <select data-draft="payerId">
+            ${t.members.map(m => `<option value="${m.id}" ${m.id===d.payerId?'selected':''}>${esc(m.name)}</option>`).join('')}
+          </select>
+        </label>
+        <div class="seg">
+          <button type="button" class="${d.picky?'':'on'}" data-action="set-picky" data-val="easy">かんたん入力</button>
+          <button type="button" class="${d.picky?'on':''}" data-action="set-picky" data-val="picky">こだわり入力</button>
+        </div>
+        ${d.picky ? `
+          <p class="hint">メンバーごとの負担額を入力（空欄は対象外）</p>
+          ${t.members.map(m => `
+            <div class="prow">
+              <span>${esc(m.name)}</span>
+              <input type="number" inputmode="numeric" data-custom="${m.id}" value="${d.custom[m.id] ?? ''}" placeholder="0">
+            </div>`).join('')}
+          <div class="sumrow">合計 <b id="sumv">${yen(sumCustom())}</b></div>
+        ` : `
+          <label class="field"><span>金額</span>
+            <input type="number" inputmode="numeric" data-draft="amount" value="${d.amount}" placeholder="0">
+          </label>
+          <div class="field"><span>割り勘対象</span>
+            <div class="tlist">
+              ${t.members.map(m => {
+                const on = d.targets.includes(m.id);
+                return `<label class="tgl ${on?'on':''}"><input type="checkbox" data-target="${m.id}" ${on?'checked':''} hidden>${esc(m.name)}</label>`;
+              }).join('') || '<small style="color:var(--muted)">メンバーがいません</small>'}
+            </div>
+          </div>`}
+      ` : ''}
+    </div>
+
+    <div class="err">${esc(ui.err)}</div>
+    <button class="btn-block btn-primary" data-action="save-schedule">保存する</button>
+    ${d.id ? `<button class="btn-block btn-danger" data-action="delete-item">この予定を削除</button>` : ''}
+  </div>`;
+}
+
+function detailSheet(id){
+  const t = currentTrip();
+  const x = t.items.find(i => i.id === id);
+  if (!x) return '';
+  const val = v => v ? `<div class="val">${esc(v)}</div>` : '<div class="unset">未設定</div>';
+  const cost = x.cost
+    ? `<div class="val">${yen(x.cost.amount)}</div><div class="pills"><span class="pill-lbl">支払い</span><span class="pm payer">${esc(mname(t, x.cost.payerId))}</span></div><div class="pills"><span class="pill-lbl">割り勘</span>${Object.entries(shares(x.cost)).map(([id, v]) => `<span class="pm">${esc(mname(t, id))}${x.cost.mode === 'custom' ? ' ' + yen(v) : ''}</span>`).join('')}</div>`
+    : '<div class="unset">未設定</div>';
+  return `
+  <div class="fullpage">
+    <header class="header"><button class="icon-btn" data-action="close-modal" aria-label="閉じる">‹</button><h1>予定の詳細</h1></header>
+    <div class="fp-body">
+    <h2>${esc(x.title)}</h2>
+    <p class="dt-date ${dayClass(x.date)}">${fmtD(x.date)}</p>
+    <div class="dt-times">
+      <div class="dt-box"><small>開始</small><span class="dt-sub">${fmtD(x.date)}</span><b>${x.startTime || '--:--'}</b></div>
+      <div class="dt-arrow">→</div>
+      <div class="dt-box"><small>終了</small><span class="dt-sub">${fmtD(x.date)}</span><b>${x.endTime || '--:--'}</b></div>
+    </div>
+    <div class="dt-row"><small>所在地</small>${x.address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.address)}" target="_blank" rel="noopener">${esc(x.address)}</a>` : '<div class="unset">未設定</div>'}</div>
+    <div class="dt-row"><small>電話番号</small>${x.phone ? `<a href="tel:${esc(x.phone.replace(/[^0-9+]/g, ''))}">${esc(x.phone)}</a>` : '<div class="unset">未設定</div>'}</div>
+    <div class="dt-row"><small>メモ</small>${val(x.memo)}</div>
+    <div class="dt-row"><small>費用</small>${cost}</div>
+    <div class="dt-row"><small>画像</small>${x.thumb ? `<div class="dt-thumb"><img src="${x.thumb}" alt=""></div>` : '<div class="unset">未設定</div>'}</div>
+    </div>
+    <button class="fab" data-action="edit-cost" data-id="${x.id}">編集する</button>
+  </div>`;
+}
+function settlements(t){
+  const bal = {};
+  t.members.forEach(m => { bal[m.id] = 0; });
+  t.items.forEach(x => {
+    if (!x.cost) return;
+    bal[x.cost.payerId] = (bal[x.cost.payerId] || 0) + x.cost.amount;
+    Object.entries(shares(x.cost)).forEach(([id, v]) => { bal[id] = (bal[id] || 0) - v; });
+  });
+  const creditors = [], debtors = [];
+  Object.entries(bal).forEach(([id, v]) => {
+    v = Math.round(v);
+    if (v > 0) creditors.push({ id, v });
+    else if (v < 0) debtors.push({ id, v: -v });
+  });
+  const out = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length){
+    const pay = Math.min(debtors[i].v, creditors[j].v);
+    if (pay > 0) out.push({ from: debtors[i].id, to: creditors[j].id, amount: pay });
+    debtors[i].v -= pay; creditors[j].v -= pay;
+    if (debtors[i].v === 0) i++;
+    if (creditors[j].v === 0) j++;
+  }
+  return out;
+}
+function settleSheet(){
+  const t = currentTrip();
+  const list = settlements(t);
+  const rows = list.length
+    ? list.map(s => `<div class="settle-row"><span class="pm">${esc(mname(t, s.from))}</span><span class="sarrow">→</span><span class="pm payer">${esc(mname(t, s.to))}</span><b>${yen(s.amount)}</b></div>`).join('')
+    : '<div class="empty">返金はありません</div>';
+  return `
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>返金の確認</h2>
+    <p class="sub2">割り勘の内容から、誰が誰にいくら返すかを計算しています</p>
+    ${rows}
+    <button class="btn-block btn-ghost" data-action="close-modal">閉じる</button>
+  </div>`;
+}
+function costSheet(id){
+  const t = currentTrip();
+  const x = t.items.find(i => i.id === id);
+  if (!x || !x.cost) return '';
+  const sh = shares(x.cost);
+  const rows = Object.entries(sh).map(([mid,v]) => `
+    <div class="prow view"><span>${esc(mname(t, mid))}</span><b>${yen(v)}</b></div>`).join('');
+  return `
+  <div class="sheet">
+    <div class="grip"></div>
+    <h2>${esc(x.title)}</h2>
+    <p class="sub2">${fmtD(x.date)}</p>
+    <div class="bigamt">${yen(x.cost.amount)}</div>
+    <div class="info"><span>支払った人</span><b>${esc(mname(t, x.cost.payerId))}</b></div>
+    <div class="info"><span>割り方</span><b>${x.cost.mode==='custom' ? '個別入力' : '均等割り'}</b></div>
+    <h3>負担額</h3>
+    ${rows || '<p class="none">対象者がいません</p>'}
+    <button class="btn-block btn-outline" data-action="edit-cost" data-id="${x.id}">この予定を編集</button>
+    <button class="btn-block btn-ghost" data-action="close-modal">閉じる</button>
+  </div>`;
+}
+
+function renderModal(){
+  const root = document.getElementById('modal-root');
+  if (!ui.modal){ root.innerHTML = ''; return; }
+  const prev = root.querySelector('.sheet');
+  const top = prev ? prev.scrollTop : 0;
+  const inner = ui.modal.type === 'schedule' ? scheduleForm() : ui.modal.type === 'create' ? createSheet() : ui.modal.type === 'detail' ? detailSheet(ui.modal.id) : ui.modal.type === 'settle' ? settleSheet() : costSheet(ui.modal.id);
+  const prevCal = root.querySelector('.cal-layer');
+  const full = ui.modal.type === 'detail';
+  root.innerHTML = `<div class="overlay${full ? ' full' : (prev ? ' static' : '')}" ${full ? '' : 'data-action="overlay"'}>${inner}</div>`
+    + (ui.cal ? `<div class="overlay cal-layer${prevCal ? ' static' : ''}" data-action="cal-overlay"><div class="cal-pop">${calendarHtml()}</div></div>` : '');
+  const next = root.querySelector('.sheet');
+  if (next) next.scrollTop = top;
+}
+
+function render(){
+  document.getElementById('app').innerHTML =
+    ui.view === 'home' ? viewHome()
+    : ui.view === 'past' ? viewPast()
+    : viewTrip();
+  renderModal();
+}
+
+/* ---------- 操作 ---------- */
+function openSchedule(item){
+  const t = currentTrip();
+  const d = {
+    id:null, date:t.start, title:'', address:'', phone:'', memo:'', thumb:'', startTime:'', endTime:'',
+    hasCost:false, amount:'', payerId:t.members[0]?.id || '',
+    targets:t.members.map(m => m.id), picky:false, custom:{}
+  };
+  if (item){
+    Object.assign(d, { id:item.id, date:item.date, title:item.title, address:item.address, phone:item.phone, memo:item.memo, thumb:item.thumb, startTime:item.startTime || '', endTime:item.endTime || '', hasCost:!!item.cost });
+    if (item.cost){
+      d.amount = item.cost.amount; d.payerId = item.cost.payerId;
+      d.targets = [...(item.cost.targets || [])];
+      d.picky = item.cost.mode === 'custom';
+      d.custom = { ...(item.cost.custom || {}) };
+    }
+  }
+  ui.draft = d; ui.err = ''; ui.modal = { type:'schedule' };
+  renderModal();
+}
+
+function togglePicky(on){
+  const d = ui.draft;
+  d.picky = on;
+  if (on){
+    const sh = shares({ amount:Number(d.amount)||0, mode:'even', targets:d.targets });
+    d.custom = Object.fromEntries(Object.entries(sh).filter(([,v]) => v > 0));
+  } else {
+    const entries = Object.entries(d.custom).filter(([,v]) => Number(v) > 0);
+    d.amount = entries.reduce((s,[,v]) => s + Number(v), 0) || '';
+    d.targets = entries.map(([k]) => k);
+  }
+}
+
+function fail(msg){
+  ui.err = msg;
+  renderModal();
+}
+
+function saveSchedule(){
+  const t = currentTrip(); const d = ui.draft;
+  if (!d.title.trim()) return fail('タイトルを入力してください');
+  if (d.endTime && !d.startTime) return fail('終了時間を入力する場合は開始時間も入力してください');
+  if (d.startTime && d.endTime && d.endTime < d.startTime) return fail('終了時間は開始時間より後にしてください');
+  const item = {
+    id: d.id || uid(), date: d.date, title: d.title.trim(),
+    address: d.address.trim(), phone: d.phone.trim(), memo: d.memo.trim(), thumb: d.thumb || '', startTime: d.startTime || '', endTime: d.endTime || '', cost: null
+  };
+  if (d.hasCost){
+    const payerId = d.payerId || t.members[0]?.id;
+    if (!payerId) return fail('先にメンバーを登録してください');
+    if (d.picky){
+      const custom = {}; let sum = 0;
+      for (const m of t.members){
+        const v = Number(d.custom[m.id]);
+        if (v > 0){ custom[m.id] = v; sum += v; }
+      }
+      if (!sum) return fail('負担額を1人以上入力してください');
+      item.cost = { amount:sum, payerId, mode:'custom', targets:[], custom };
+    } else {
+      const amt = Number(d.amount);
+      if (!(amt > 0)) return fail('金額を入力してください');
+      if (!d.targets.length) return fail('割り勘対象を選んでください');
+      item.cost = { amount:amt, payerId, mode:'even', targets:[...d.targets], custom:{} };
+    }
+  }
+  const idx = t.items.findIndex(x => x.id === item.id);
+  if (idx >= 0) t.items[idx] = item; else t.items.push(item);
+  save();
+  ui.modal = null; ui.draft = null; ui.tab = 'schedule';
+  render();
+}
+
+function addMember(){
+  const input = document.getElementById('newMember');
+  const name = (input?.value || '').trim();
+  if (!name) return;
+  ui.tripDraft.members.push({ id:uid(), name });
+  renderModal();
+  document.getElementById('newMember')?.focus();
+}
+
+function saveTrip(){
+  const d = ui.tripDraft;
+  if (!d.title.trim()) return fail('タイトルを入力してください');
+  if (!d.start || !d.end) return fail('日程を入力してください');
+  if (d.end < d.start) return fail('帰着日は出発日より後にしてください');
+  if (!d.members.length) return fail('メンバーを1人以上追加してください');
+  db.trips.push({
+    id:uid(), title:d.title.trim(), start:d.start, end:d.end, thumb:d.thumb || '',
+    members:d.members.map(m => ({...m})), items:[]
+  });
+  save();
+  ui.modal = null; ui.view = 'home'; ui.err = ''; ui.tripDraft = null;
+  render();
+}
+
+const handlers = {
+  'go-home': () => { ui.view = 'home'; ui.err = ''; render(); },
+  'go-past': () => { ui.view = 'past'; render(); },
+  'go-create': () => { ui.tripDraft = emptyTripDraft(); ui.err = ''; ui.cal = null; ui.modal = { type:'create' }; renderModal(); },
+  'open-trip': el => {
+    ui.tripId = el.dataset.id; ui.tab = 'schedule';
+    ui.from = el.dataset.from === 'past' ? 'past' : 'home';
+    ui.view = 'trip'; render(); window.scrollTo(0,0);
+  },
+  'back': () => { ui.view = ui.from || 'home'; render(); },
+  'tab': el => { ui.tab = el.dataset.tab; render(); },
+  'new-schedule': () => openSchedule(null),
+  'edit-item': el => { ui.modal = { type:'detail', id: el.dataset.id }; renderModal(); },
+  'open-cost': el => { ui.modal = { type:'cost', id: el.dataset.id }; renderModal(); },
+  'edit-cost': el => {
+    const it = currentTrip().items.find(x => x.id === el.dataset.id);
+    if (it) openSchedule(it);
+  },
+  'close-modal': () => { ui.modal = null; ui.draft = null; renderModal(); },
+  'overlay': (el, e) => { if (e.target === el) handlers['close-modal'](); },
+  'save-schedule': () => saveSchedule(),
+  'delete-item': () => {
+    const id = ui.draft?.id;
+    if (!id || !confirm('この予定を削除しますか？')) return;
+    const t = currentTrip();
+    t.items = t.items.filter(x => x.id !== id);
+    save(); ui.modal = null; ui.draft = null; render();
+  },
+  'add-member': () => addMember(),
+  'remove-member': el => {
+    ui.tripDraft.members = ui.tripDraft.members.filter(m => m.id !== el.dataset.id);
+    renderModal();
+  },
+  'set-picky': el => { const on = el.dataset.val === 'picky'; if (ui.draft.picky !== on){ togglePicky(on); renderModal(); } },
+  'open-settle': () => { ui.modal = { type:'settle' }; renderModal(); },
+  'cal-overlay': (el, e) => { if (e.target === el) handlers['cal-close'](); },
+  'cal-close': () => { ui.cal = null; renderModal(); },
+  'open-cal': el => {
+    const t = el.dataset.target;
+    if (ui.cal === t){ ui.cal = null; renderModal(); return; }
+    ui.cal = t;
+    ui.calMonth = (t === 'start' ? ui.tripDraft.start : ui.tripDraft.end).slice(0,7);
+    renderModal();
+  },
+  'cal-move': el => {
+    const [y,m] = ui.calMonth.split('-').map(Number);
+    ui.calMonth = toStr(new Date(y, m-1+Number(el.dataset.delta), 1)).slice(0,7);
+    renderModal();
+  },
+  'cal-pick': el => {
+    const date = el.dataset.date; const d = ui.tripDraft;
+    if (ui.cal === 'start'){
+      d.start = date;
+      if (d.end < date) d.end = date;
+      ui.cal = 'end'; ui.calMonth = d.end.slice(0,7);
+    } else {
+      if (date < d.start) d.start = date; else d.end = date;
+      ui.cal = null;
+    }
+    renderModal();
+  },
+  'toggle-theme': () => {
+    const root = document.documentElement;
+    const cur = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  },
+  'toggle-accent': () => {
+    const root = document.documentElement;
+    const next = root.dataset.accent === 'aqua' ? 'coral' : 'aqua';
+    root.dataset.accent = next;
+    try { localStorage.setItem('shiori-accent', next); } catch(e){}
+  },
+  'save-trip': () => saveTrip()
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const fn = handlers[el.dataset.action];
+  if (fn) fn(el, e);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'newMember'){
+    e.preventDefault(); addMember();
+  }
+});
+
+function bindField(el){
+  if (el.dataset.draft && ui.draft) ui.draft[el.dataset.draft] = el.value;
+  if (el.dataset.tdraft && ui.tripDraft) ui.tripDraft[el.dataset.tdraft] = el.value;
+  if (el.dataset.custom && ui.draft){
+    ui.draft.custom[el.dataset.custom] = el.value;
+    const s = document.getElementById('sumv');
+    if (s) s.textContent = yen(sumCustom());
+  }
+}
+document.addEventListener('input', e => bindField(e.target));
+
+document.addEventListener('change', async e => {
+  const el = e.target;
+  bindField(el);
+
+  if (el.dataset.file === 'thumb' && el.files[0]){
+    ui.draft.thumb = await compressImage(el.files[0]);
+    renderModal();
+  }
+  if (el.dataset.file === 'tthumb' && el.files[0]){
+    ui.tripDraft.thumb = await compressImage(el.files[0]);
+    renderModal();
+  }
+  if (el.dataset.toggle === 'cost'){
+    ui.draft.hasCost = el.checked;
+    if (el.checked && !ui.draft.payerId) ui.draft.payerId = currentTrip().members[0]?.id || '';
+    renderModal();
+  }
+  if (el.dataset.toggle === 'picky'){
+    togglePicky(el.checked);
+    renderModal();
+  }
+  if (el.dataset.target){
+    const id = el.dataset.target; const d = ui.draft;
+    d.targets = el.checked ? [...d.targets, id] : d.targets.filter(x => x !== id);
+    renderModal();
+  }
+});
+
+try { const a = localStorage.getItem('shiori-accent'); if (a) document.documentElement.dataset.accent = a; } catch(e){}
+render();
+</script>
+</body>
+</html>
