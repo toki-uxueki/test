@@ -268,6 +268,12 @@ img{display:block}
 .fullpage .header{height:116px;box-sizing:border-box;padding:0 16px}
 .trip-head{height:92px;padding-bottom:0;box-sizing:border-box}
 .fullpage .header{height:92px;box-sizing:border-box}
+@keyframes tripIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#app.enter{animation:tripIn .4s ease-out}
+.icon-btn,.btn-block,.add-btn,.tcard{transition:transform .12s ease}
+.icon-btn:active,.btn-block:active{transform:scale(.9)}
+.header-hero .add-btn:active{transform:translateY(-50%) scale(.9)}
+.tcard:active{transform:scale(.98)}
 </style>
 </head>
 <body>
@@ -449,10 +455,7 @@ function viewHome(){
 function viewPast(){
   const past = db.trips.filter(t => tripStatus(t).kind === 'past').sort((a,b) => b.start.localeCompare(a.start));
   return `
-  <header class="header">
-    <button class="icon-btn" data-action="go-home" aria-label="戻る">‹</button>
-    <h1>過去のしおり</h1>
-  </header>
+  <header class="trip-head"><div class="top"><button class="icon-btn" data-action="go-home" aria-label="戻る"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M16 5.5L7 12l9 6.5z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/></svg></button><h1>過去のしおり</h1></div></header>
   <main class="pad">
     ${past.length ? past.map(tripCard).join('') : `<div class="empty">過去のしおりはまだありません</div>`}
   </main>`;
@@ -924,8 +927,12 @@ const handlers = {
     ui.tripId = el.dataset.id; ui.tab = 'schedule';
     ui.from = el.dataset.from === 'past' ? 'past' : 'home';
     ui.view = 'trip'; render(); window.scrollTo(0,0);
+    const a = document.getElementById('app'); a.classList.remove('enter'); void a.offsetWidth; a.classList.add('enter');
   },
-  'back': () => { ui.view = ui.from || 'home'; render(); },
+  'back': () => {
+    ui.view = ui.from || 'home'; render(); window.scrollTo(0,0);
+    const a = document.getElementById('app'); a.classList.remove('enter'); void a.offsetWidth; a.classList.add('enter');
+  },
   'tab': el => { ui.tab = el.dataset.tab; render(); },
   'new-schedule': () => openSchedule(null),
   'edit-item': el => { ui.modal = { type:'detail', id: el.dataset.id }; renderModal(); },
