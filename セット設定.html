@@ -527,8 +527,13 @@ document.addEventListener("DOMContentLoaded", () => {
       `<style>#patternBody table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:16px;border:1px solid #ccc}#patternBody th,#patternBody td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}#patternBody th{background:#f2f5f8;text-align:center}#patternBody tr.grp td{padding-top:18px}</style>` +
       `<table><thead><tr><th>部署</th><th>組み合わせ（種類×貸与枚数）</th><th>人数</th></tr></thead><tbody>${rows}</tbody></table>`;
     document.getElementById("patternBody").innerHTML = [...new Set(SORTED.map(r => r[0]))].map(dept => `<div class='dept-name' data-dept='${esc(dept)}'>${esc(dept)}</div><table data-dept='${esc(dept)}'><tbody>${SORTED.filter(r => r[0] === dept).map(([d, combo, people]) => `<tr><td>${esc(combo)}</td><td style='text-align:right'>${yen(people)}名</td></tr>`).join("")}</tbody></table>`).join("");
-    patternScreen.classList.add("open");
-    document.getElementById("patternCount").classList.add("active");
+    const w = window.open("", "_blank");
+    if (w) {
+      const body = document.getElementById("patternBody").innerHTML;
+      const css = 'body{font-family:Meiryo,sans-serif;margin:24px;color:#1d2228;font-size:14px}h2{font-size:22px;margin:0 0 12px}table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:8px}th,td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}th{background:#f2f5f8;text-align:center}.dept-name{font-weight:700;font-size:22px;margin:16px 0 6px}';
+      w.document.write('<!DOCTYPE html><html lang=ja><head><meta charset=UTF-8><title>契約パターンごとの人数</title><style>' + css + '</style></head><body><h2>契約パターンごとの人数</h2>' + '<p><select id=f style="font-size:18px;padding:6px 14px;border-radius:5px;border:1px solid #889">' + document.getElementById("deptFilter").innerHTML + '</select></p>' + body + '<' + 'script>document.getElementById("f").addEventListener("change",function(e){var v=e.target.value;document.querySelectorAll("[data-dept]").forEach(function(el){el.style.display=!v||el.dataset.dept===v?"":"none";});});</' + 'script></body></html>');
+      w.document.close();
+    }
   });
   document.getElementById("backPattern").addEventListener("click", () => {
     patternScreen.classList.remove("open");
