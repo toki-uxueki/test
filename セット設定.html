@@ -37,10 +37,11 @@ button,input{font:inherit}
 .btn.dark{background:#6b7280;border-color:#6b7280;color:#fff}
 .btn.small{padding:3px 8px;font-size:12px}
 .tbgroup{display:flex;gap:6px;flex-wrap:wrap}
+.toolbar .btn{border-radius:5px}
 
 /* レイアウト */
-.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 140px)}
-aside{border-right:1px solid var(--line);background:var(--panel);padding:12px}
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 140px);background:linear-gradient(to right,var(--panel) 299px,var(--line) 299px,var(--line) 300px,#fff 300px)}
+aside{padding:12px}
 aside h2{font-size:20px;margin:18px 0 8px}
 .leasetable{width:100%;border-collapse:collapse;background:#fff}
 .leasetable th,.leasetable td{border:1px solid var(--line);padding:7px 10px;text-align:left}
@@ -55,7 +56,7 @@ aside h2{font-size:20px;margin:18px 0 8px}
 .deptlist .tip strong{display:block;margin-bottom:4px;font-size:15px}
 .deptlist .tip div{padding:3px 0}
 
-main{padding:14px 18px}
+main{position:relative;padding:14px 18px}
 .hospital{background:#cdf1f8;color:#0b4a5b;font-size:20px;font-weight:600;padding:10px 16px;border-radius:var(--radius);margin-bottom:14px}
 .hospital small{font-size:14px;font-weight:400;margin-left:12px}
 h1{font-size:24px;margin:4px 0 8px}
@@ -92,14 +93,25 @@ table.items .code{color:#374151}
 footer.hint{margin-top:10px;color:var(--muted);font-size:12px}
 
 @media (max-width:900px){
-  .layout{grid-template-columns:1fr}
+  .layout{grid-template-columns:1fr;background:none}
   aside{border-right:none;border-bottom:1px solid var(--line)}
   .set{grid-template-columns:1fr}
 }
+#patternScreen{display:none;position:absolute;top:0;left:0;right:0;min-height:100%;background:#fff;z-index:50;padding:14px 18px}
+#patternScreen.open{display:block}
+#patternCount.active{background:#374151;color:#fff;border-color:#374151}
+#patternBody .dept-name{font-weight:700;font-size:22px;margin:8px 0 6px}
+#patternBody .dept-name.grp{margin-top:22px}
+#patternBody .row{display:flex;gap:24px;padding:1px 0;font-size:14px}
+#patternBody .combo{width:480px}
+#patternBody table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:8px}
+#patternBody th,#patternBody td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}
+#patternBody th{background:#f2f5f8;text-align:center}
 </style>
 </head>
 <body>
 
+<div style='background:#2185d0;color:#fff;font-weight:700;text-align:center;padding:6px 12px;font-size:14px'>これはデモ画面です</div>
 <header class="topnav">
   <span>病院情報検索</span>
   <span>契約検索 ▾</span>
@@ -146,7 +158,7 @@ footer.hint{margin-top:10px;color:var(--muted);font-size:12px}
       <tr><td>診察衣</td><td>160</td></tr>
     </table>
 
-    <h2>部署一覧</h2>
+    <div style='display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 8px;flex-wrap:wrap'><h2 style='margin:0'>部署一覧</h2><button class="btn small" id="patternCount">契約パターンごとの人数</button></div>
     <ul class="deptlist" id="deptList"></ul>
   </aside>
 
@@ -158,6 +170,7 @@ footer.hint{margin-top:10px;color:var(--muted);font-size:12px}
     <span class="note">※セットパターンを削除する場合は、貸与枚数クリア押下後、削除ボタンが表示されます。</span>
 
     <div id="sets"></div>
+<div id="patternScreen"><div class="hospital" style='margin:0 0 14px'>01：00000 ○○病院 <small>（サージカル）</small></div><div style='padding:4px 16px;display:flex;align-items:center;gap:28px'><button class="btn small" id="backPattern">戻る</button><select id='deptFilter' style='font-size:16px;padding:6px 14px;border-radius:5px;border:1px solid #889'></select></div><div id="patternBody" style='padding:8px 24px 24px'></div></div>
   </main>
 </div>
 
@@ -238,8 +251,9 @@ function tipLines(set) {
 }
 
 function renderDeptList() {
-  document.getElementById("deptList").innerHTML = state.sets
-    .map(s => `<li data-jump="${esc(s.id)}">${esc(s.name)}<div class="tip"><strong>${esc(s.name)}</strong>${tipLines(s)}</div></li>`).join("");
+  const DEPT_NAMES = ["看護部","医局","リネン","給食","看護助手","ＯＰＥ","クラーク","ＥＲ","訪問診療","検査","放射線科","相談室","栄養課","腎センタ","薬局","リハビリ"];
+  document.getElementById("deptList").innerHTML = DEPT_NAMES
+    .map(n => `<li>${esc(n)}</li>`).join("");
 }
 
 function renderPattern(set, p, pi) {
@@ -362,6 +376,170 @@ document.getElementById("deptList").addEventListener("click", e => {
 });
 
 renderAll();
+function patternItems(p) {
+  const cats = {};
+  p.items.forEach(it => { cats[it.cat] = (cats[it.cat] || 0) + (Number(it.qty) || 0); });
+  return Object.entries(cats).filter(([, v]) => v > 0).map(([k, v]) => `${k}${v}枚`).join("・");
+}
+
+const DEPT_ORDER = ["看護部","医局","リネン","給食","看護助手","ＯＰＥ","クラーク","ＥＲ","訪問診療","検査","放射線科","相談室","栄養課","腎センタ","薬局","リハビリ"];
+const PATTERN_DATA = [
+  ['ＯＰＥ','手術上衣 1枚・手術衣下 1枚',289],
+  ['ＯＰＥ','手術上衣 1枚',80],
+  ['ＯＰＥ','手術衣下 1枚',80],
+  ['ＯＰＥ','ブルゾン 5枚',10],
+  ['ＯＰＥ','手術上衣 5枚・手術衣下 5枚',9],
+  ['ＯＰＥ','手術上衣 10枚・手術衣下 10枚',2],
+  ['ＯＰＥ','手術上衣 5枚',1],
+  ['ＯＰＥ','診察衣 5枚',1],
+  ['看護部','パンツ 5枚・看護上衣 5枚',127],
+  ['看護部','パンツ 5枚・看護上衣 6枚',11],
+  ['看護部','パンツ 6枚・看護上衣 5枚',5],
+  ['看護部','パンツ 6枚・看護上衣 6枚',4],
+  ['看護部','スクラブ 5枚・東基マタニティパンツ 5枚',2],
+  ['看護部','シャツ 2枚・ズボン 2枚・パンツ 6枚・ブルゾン 1枚・看護上衣 6枚',1],
+  ['看護部','シャツ 6枚・ズボン 6枚・ブルゾン 4枚',1],
+  ['看護部','スクラブ 12枚・パンツ 10枚・ブルゾン 2枚',1],
+  ['看護部','スクラブ 5枚・パンツ 11枚・ブルゾン 2枚・看護上衣 5枚',1],
+  ['看護部','スクラブ 5枚・パンツ 7枚・看護上衣 2枚',1],
+  ['看護部','スクラブ 7枚・パンツ 10枚・ブルゾン 2枚・看護上衣 5枚',1],
+  ['看護部','パンツ 2枚・看護上衣 2枚',1],
+  ['看護部','パンツ 5枚・看護上衣 7枚',1],
+  ['看護部','パンツ 5枚・看護上衣 8枚',1],
+  ['看護部','パンツ 9枚・看護上衣 5枚',1],
+  ['医局','診察衣 5枚',37],
+  ['医局','スクラブ 5枚・パンツ 5枚・診察衣 5枚',32],
+  ['医局','診察衣 1枚',7],
+  ['医局','スクラブ 5枚・診察衣 5枚',5],
+  ['医局','診察衣 3枚',4],
+  ['医局','スクラブ 4枚・パンツ 4枚・診察衣 4枚',3],
+  ['医局','スクラブ 5枚・パンツ 5枚・診察衣 1枚',2],
+  ['医局','パンツ 5枚・診察衣 5枚',2],
+  ['医局','診察衣 8枚',2],
+  ['医局','スクラブ 11枚・パンツ 8枚・診察衣 8枚',1],
+  ['医局','スクラブ 13枚・パンツ 12枚・診察衣 5枚',1],
+  ['医局','スクラブ 2枚',1],
+  ['医局','スクラブ 2枚・パンツ 5枚・診察衣 5枚',1],
+  ['医局','スクラブ 2枚・診察衣 5枚',1],
+  ['医局','スクラブ 4枚・パンツ 5枚・診察衣 4枚',1],
+  ['医局','スクラブ 4枚・診察衣 4枚',1],
+  ['医局','スクラブ 5枚・パンツ 5枚',1],
+  ['医局','スクラブ 5枚・パンツ 5枚・診察衣 10枚',1],
+  ['医局','スクラブ 5枚・パンツ 5枚・診察衣 4枚',1],
+  ['医局','スクラブ 9枚・パンツ 5枚・診察衣 5枚',1],
+  ['医局','パンツ 4枚・診察衣 5枚',1],
+  ['医局','パンツ 5枚・ブルゾン 2枚・手術上衣 8枚・手術衣下 8枚・診察衣 4枚',1],
+  ['医局','パンツ 6枚',1],
+  ['医局','ブルゾン 2枚',1],
+  ['医局','手術上衣 3枚・手術衣下 3枚・診察衣 3枚',1],
+  ['医局','手術上衣 5枚・手術衣下 5枚・診察衣 5枚',1],
+  ['医局','診察衣 2枚',1],
+  ['医局','診察衣 4枚',1],
+  ['ＥＲ','スクラブ 5枚・パンツ 5枚',36],
+  ['ＥＲ','スクラブ 5枚・パンツ 5枚・ブルゾン 5枚',4],
+  ['ＥＲ','ブルゾン 5枚',3],
+  ['ＥＲ','スクラブ 5枚',2],
+  ['ＥＲ','スクラブ 10枚',1],
+  ['ＥＲ','スクラブ 5枚・パンツ 5枚・ブルゾン 1枚',1],
+  ['ＥＲ','スクラブ 5枚・パンツ 5枚・ブルゾン 2枚',1],
+  ['ＥＲ','スクラブ 5枚・パンツ 5枚・ブルゾン 3枚',1],
+  ['ＥＲ','スクラブ 7枚・パンツ 5枚',1],
+  ['ＥＲ','ブルゾン 2枚',1],
+  ['ＥＲ','ブルゾン 6枚',1],
+  ['看護助手','シャツ 5枚・パンツ 5枚',38],
+  ['看護助手','シャツ 4枚・パンツ 4枚',1],
+  ['看護助手','シャツ 5枚・パンツ 7枚',1],
+  ['看護助手','シャツ 5枚・パンツ 9枚',1],
+  ['看護助手','シャツ 6枚・パンツ 5枚',1],
+  ['看護助手','パンツ 5枚',1],
+  ['給食','エプロン 7枚・パンツ 7枚・帽子 7枚・調理上衣 7枚',24],
+  ['給食','パンツ 7枚・調理上衣 7枚',6],
+  ['給食','エプロン 4枚・パンツ 4枚・帽子 4枚・調理上衣 4枚',5],
+  ['給食','パンツ 7枚・帽子 7枚・調理上衣 7枚',2],
+  ['給食','エプロン 7枚',1],
+  ['給食','エプロン 7枚・スクラブ 7枚・パンツ 12枚・帽子 7枚・診察衣 6枚・調理上衣 7枚',1],
+  ['給食','エプロン 7枚・スクラブ 8枚・パンツ 12枚・帽子 7枚・診察衣 6枚・調理上衣 7枚',1],
+  ['給食','パンツ 5枚・帽子 5枚・調理上衣 5枚',1],
+  ['リハビリ','スクラブ 4枚・パンツ 4枚',18],
+  ['リハビリ','スクラブ 4枚',3],
+  ['リハビリ','パンツ 4枚',3],
+  ['リハビリ','ジャケット 3枚・スクラブ 4枚・パンツ 4枚',2],
+  ['リハビリ','スクラブ 4枚・パンツ 5枚',1],
+  ['リハビリ','パンツ 5枚・看護上衣 5枚',1],
+  ['放射線科','スクラブ 3枚・パンツ 3枚',9],
+  ['放射線科','スクラブ 4枚・パンツ 4枚・ブルゾン 2枚・診察衣 2枚',8],
+  ['放射線科','スクラブ 4枚',5],
+  ['放射線科','ブルゾン 2枚',4],
+  ['放射線科','スクラブ 4枚・パンツ 4枚・ブルゾン 2枚',1],
+  ['クラーク','パンツ 5枚・看護上衣 5枚',20],
+  ['クラーク','パンツ 6枚・看護上衣 5枚',2],
+  ['クラーク','スクラブ 4枚・パンツ 4枚',1],
+  ['クラーク','パンツ 5枚',1],
+  ['クラーク','パンツ 6枚・看護上衣 6枚',1],
+  ['クラーク','パンツ 7枚・看護上衣 6枚',1],
+  ['検査','スクラブ 4枚・パンツ 4枚・ブルゾン 4枚',7],
+  ['検査','スクラブ 10枚・パンツ 10枚',3],
+  ['検査','スクラブ 5枚・パンツ 5枚・診察衣 3枚',3],
+  ['検査','スクラブ 2枚・パンツ 2枚・診察衣 3枚',2],
+  ['検査','スクラブ 10枚・パンツ 11枚',1],
+  ['検査','スクラブ 2枚・パンツ 3枚・診察衣 3枚',1],
+  ['検査','スクラブ 4枚・パンツ 4枚',1],
+  ['検査','スクラブ 4枚・パンツ 4枚・ブルゾン 5枚',1],
+  ['検査','スクラブ 4枚・パンツ 6枚・ブルゾン 4枚',1],
+  ['検査','スクラブ 5枚・パンツ 5枚',1],
+  ['検査','スクラブ 6枚・パンツ 4枚・ブルゾン 4枚',1],
+  ['検査','スクラブ 6枚・パンツ 6枚・診察衣 3枚',1],
+  ['検査','診察衣 2枚',1],
+  ['薬局','パンツ 4枚・診察衣 4枚',19],
+  ['薬局','パンツ 4枚・診察衣 5枚',1],
+  ['薬局','パンツ 4枚・診察衣 6枚',1],
+  ['薬局','パンツ 5枚・診察衣 4枚',1],
+  ['相談室','診察衣 4枚',4],
+  ['相談室','パンツ 3枚・診察衣 4枚',3],
+  ['相談室','パンツ 4枚・診察衣 4枚',1],
+  ['相談室','薬局衣 4枚',1],
+  ['腎センタ','スクラブ 5枚・パンツ 5枚',7],
+  ['腎センタ','スクラブ 6枚・パンツ 5枚',2],
+  ['リネン','スクラブ 5枚・パンツ 5枚',3],
+  ['リネン','スクラブ 7枚・パンツ 5枚',1],
+  ['栄養課','スクラブ 5枚・パンツ 5枚・帽子 5枚・診察衣 5枚',2],
+  ['栄養課','スクラブ 5枚・パンツ 5枚・帽子 5枚・診察衣 6枚',1],
+  ['栄養課','スクラブ 5枚・パンツ 5枚・帽子 7枚・診察衣 5枚',1],
+  ['訪問診療','シャツ 5枚・ズボン 5枚・ブルゾン 3枚',1]
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const patternScreen = document.getElementById("patternScreen");
+  document.getElementById("patternCount").addEventListener("click", () => {
+    if (patternScreen.classList.contains("open")) {
+      patternScreen.classList.remove("open");
+      document.getElementById("patternCount").classList.remove("active");
+      return;
+    }
+    document.getElementById("deptFilter").innerHTML = "<option value=''>全部署</option>" + DEPT_ORDER.map(n => `<option value='${esc(n)}'>${esc(n)}</option>`).join("");
+    const SORTED = [...PATTERN_DATA].sort((a, b) => DEPT_ORDER.indexOf(a[0]) - DEPT_ORDER.indexOf(b[0]));
+    const rows = SORTED.map(([dept, combo, people], i) => {
+      const first = i === 0 || SORTED[i - 1][0] !== dept;
+      const span = SORTED.filter(r => r[0] === dept).length;
+      return `<tr data-dept='${esc(dept)}' class='${first && i > 0 ? "grp" : ""}'>${first ? `<td rowspan='${span}'>${esc(dept)}</td>` : ""}<td>${esc(combo)}</td><td style='text-align:right'>${yen(people)}名</td></tr>`;
+    }).join("");
+    document.getElementById("patternBody").innerHTML =
+      `<style>#patternBody table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:16px;border:1px solid #ccc}#patternBody th,#patternBody td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}#patternBody th{background:#f2f5f8;text-align:center}#patternBody tr.grp td{padding-top:18px}</style>` +
+      `<table><thead><tr><th>部署</th><th>組み合わせ（種類×貸与枚数）</th><th>人数</th></tr></thead><tbody>${rows}</tbody></table>`;
+    document.getElementById("patternBody").innerHTML = [...new Set(SORTED.map(r => r[0]))].map(dept => `<div class='dept-name' data-dept='${esc(dept)}'>${esc(dept)}</div><table data-dept='${esc(dept)}'><tbody>${SORTED.filter(r => r[0] === dept).map(([d, combo, people]) => `<tr><td>${esc(combo)}</td><td style='text-align:right'>${yen(people)}名</td></tr>`).join("")}</tbody></table>`).join("");
+    patternScreen.classList.add("open");
+    document.getElementById("patternCount").classList.add("active");
+  });
+  document.getElementById("backPattern").addEventListener("click", () => {
+    patternScreen.classList.remove("open");
+    document.getElementById("patternCount").classList.remove("active");
+  });
+  document.getElementById("patternScreen").addEventListener("change", e => {
+    if (e.target.id !== "deptFilter") return;
+    const v = e.target.value;
+    document.querySelectorAll("#patternBody [data-dept]").forEach(el => { el.style.display = !v || el.dataset.dept === v ? "" : "none"; });
+  });
+});
 </script>
 </body>
 </html>
