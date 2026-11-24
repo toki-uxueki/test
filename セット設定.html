@@ -107,6 +107,8 @@ footer.hint{margin-top:10px;color:var(--muted);font-size:12px}
 #patternBody table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:8px}
 #patternBody th,#patternBody td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}
 #patternBody th{background:#f2f5f8;text-align:center}
+#patternBody table td{border-top:1px dotted #888;border-bottom:1px dotted #888}
+#patternBody td.dept-vert{writing-mode:vertical-rl;text-align:center;background:#d9d9d9;width:36px;padding:6px 4px;letter-spacing:.2em}
 </style>
 </head>
 <body>
@@ -511,6 +513,8 @@ const PATTERN_DATA = [
 document.addEventListener("DOMContentLoaded", () => {
   const patternScreen = document.getElementById("patternScreen");
   document.getElementById("patternCount").addEventListener("click", () => {
+    if (!window.__noticeOK) { document.getElementById("notice").style.display = "flex"; return; }
+    window.__noticeOK = false;
     if (patternScreen.classList.contains("open")) {
       patternScreen.classList.remove("open");
       document.getElementById("patternCount").classList.remove("active");
@@ -526,18 +530,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("patternBody").innerHTML =
       `<style>#patternBody table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:16px;border:1px solid #ccc}#patternBody th,#patternBody td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}#patternBody th{background:#f2f5f8;text-align:center}#patternBody tr.grp td{padding-top:18px}</style>` +
       `<table><thead><tr><th>部署</th><th>組み合わせ（種類×貸与枚数）</th><th>人数</th></tr></thead><tbody>${rows}</tbody></table>`;
-    document.getElementById("patternBody").innerHTML = [...new Set(SORTED.map(r => r[0]))].map(dept => `<div class='dept-name' data-dept='${esc(dept)}'>${esc(dept)}</div><table data-dept='${esc(dept)}'><tbody>${SORTED.filter(r => r[0] === dept).map(([d, combo, people]) => `<tr><td>${esc(combo)}</td><td style='text-align:right'>${yen(people)}名</td></tr>`).join("")}</tbody></table>`).join("");
+    document.getElementById("patternBody").innerHTML = [...new Set(SORTED.map(r => r[0]))].map(dept => `<div class='dept-name' data-dept='${esc(dept)}'>${esc(dept)}</div><table data-dept='${esc(dept)}'><tbody>${SORTED.filter(r => r[0] === dept).map(([d, combo, people], i, arr) => `<tr>${i === 0 ? `<td class='dept-vert' rowspan='${arr.length}'>${esc(dept)}</td>` : ""}<td>${esc(combo).replace(/看護上衣/g, "上着")}</td><td style='text-align:right'>${yen(people)}名</td></tr>`).join("")}</tbody></table>`).join("");
     const w = window.open("", "_blank");
     if (w) {
       const body = document.getElementById("patternBody").innerHTML;
-      const css = 'body{font-family:Meiryo,sans-serif;margin:24px;color:#1d2228;font-size:14px}h2{font-size:22px;margin:0 0 12px}table{border-collapse:collapse;width:auto;max-width:720px;font-size:14px;margin-top:8px}th,td{border:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}th{background:#f2f5f8;text-align:center}.dept-name{font-weight:700;font-size:22px;margin:16px 0 6px}';
-      w.document.write('<!DOCTYPE html><html lang=ja><head><meta charset=UTF-8><title>契約パターンごとの人数</title><style>' + css + '</style></head><body><h2>契約パターンごとの人数</h2>' + '<p><select id=f style="font-size:18px;padding:6px 14px;border-radius:5px;border:1px solid #889">' + document.getElementById("deptFilter").innerHTML + '</select></p>' + body + '<' + 'script>document.getElementById("f").addEventListener("change",function(e){var v=e.target.value;document.querySelectorAll("[data-dept]").forEach(function(el){el.style.display=!v||el.dataset.dept===v?"":"none";});});</' + 'script></body></html>');
+      const css = 'body{font-family:Meiryo,sans-serif;margin:50px 200px;color:#1d2228;font-size:14px}h2{font-size:22px;margin:0 0 12px}table{border-collapse:separate;border-spacing:0;border:1px solid #888;border-radius:5px;overflow:hidden;table-layout:fixed;width:576px;font-size:14px;margin-top:8px}td.dept-vert{border-bottom:none;width:36px;writing-mode:vertical-rl;text-align:center;background:#d9d9d9;letter-spacing:.2em}td:nth-last-child(2){width:480px}td:last-child{width:60px}th,td{border-bottom:1px solid #888;padding:4px 10px;text-align:left;vertical-align:middle}td:not(:last-child),th:not(:last-child){border-right:1px solid #888}tr:last-child td{border-bottom:none}th{background:#f2f5f8;text-align:center}.dept-name{font-weight:700;font-size:22px;margin:16px 0 6px}';
+      w.document.write('<!DOCTYPE html><html lang=ja><head><meta charset=UTF-8><title>契約パターンごとの人数</title><style>' + css + '</style></head><body><h2 style="background:#1e2328;color:#fff;height:48px;line-height:48px;margin:-50px -200px 24px;padding:0 200px;font-size:18px;font-weight:600">契約パターンごとの人数</h2>' + '<p><select id=f style="font-size:18px;padding:6px 14px;border-radius:5px;border:1px solid #889">' + document.getElementById("deptFilter").innerHTML + '</select></p>' + body + '<' + 'script>document.getElementById("f").addEventListener("change",function(e){var v=e.target.value;document.querySelectorAll("[data-dept]").forEach(function(el){el.style.display=!v||el.dataset.dept===v?"":"none";});});</' + 'script></body></html>');
       w.document.close();
     }
   });
   document.getElementById("backPattern").addEventListener("click", () => {
     patternScreen.classList.remove("open");
     document.getElementById("patternCount").classList.remove("active");
+  });
+  document.getElementById("noticeOk").addEventListener("click", () => {
+    document.getElementById("notice").style.display = "none";
+    window.__noticeOK = true;
+    document.getElementById("patternCount").click();
   });
   document.getElementById("patternScreen").addEventListener("change", e => {
     if (e.target.id !== "deptFilter") return;
@@ -546,5 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+<div id='notice' style='display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center'><div style='background:#fff;border-radius:8px;padding:24px 28px;min-width:300px;text-align:center'><p style='font-size:16px;margin:0 0 18px'>別ウインドで表示します</p><button class='btn small' id='noticeOk' style='padding:6px 28px;background:#2563eb;color:#fff;border-color:#2563eb'>OK</button></div></div>
 </body>
 </html>
