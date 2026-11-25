@@ -59,6 +59,7 @@
   .label{font-size:17px;font-weight:600;color:var(--ink)}
   .big{font-size:40px;font-weight:700;color:var(--blue-d);margin:6px 0 4px;text-shadow:0 1px 0 rgba(255,255,255,.9)}
   .sub{font-size:13px;color:var(--sub)}
+  .big .unit{font-size:20px;font-weight:600}
   .sec-title{font-size:18px;color:var(--ink);text-align:center;margin:0 0 12px}
   label.lbl{display:block;font-size:13px;color:var(--sub);margin:12px 0 6px}
 
@@ -166,7 +167,9 @@
     <div class="label" id="monthLabel">今月の合計残業時間</div>
     <div class="big" id="monthTotal">0時間00分</div>
     <div class="sub" id="monthSub">0.00 時間 ／ 0日</div>
-    <div class="sub" style="margin-top:10px">全期間の合計：<span id="allTotal">0時間00分</span></div>
+    <div class="sub" id="monthPay" style="margin-top:6px;font-size:15px;font-weight:600;color:var(--ink)"></div>
+    <div class="sub" id="monthAvg" style="display:none"></div>
+    <div class="sub" style="display:none">全期間の合計：<span id="allTotal">0時間00分</span></div>
   </div>
 
   <div id="pages">
@@ -372,8 +375,10 @@
     $("monthText").textContent = yy[0] + "年" + parseInt(yy[1], 10) + "月";
     var mo = parseInt(yy[1], 10);
     $("monthLabel").textContent = (mo ? mo + "月の合計残業時間" : "合計残業時間");
-    $("monthTotal").textContent = fmt(monthSum);
+    $("monthTotal").innerHTML = Math.floor(monthSum / 60) + '<span class="unit">時間</span>' + p2(monthSum % 60) + '<span class="unit">分</span>';
     $("monthSub").textContent = (monthSum/60).toFixed(2) + " 時間 ／ " + monthKeys.length + "日";
+    $("monthPay").textContent = "残業代予想額：" + (monthSum * 34).toLocaleString() + "円";
+    $("monthSub").textContent = "1日あたりの平均：" + (monthKeys.length ? fmt(Math.round(monthSum / monthKeys.length)) : "0時間00分");
     $("allTotal").textContent = fmt(allSum);
 
     var list = $("list");
