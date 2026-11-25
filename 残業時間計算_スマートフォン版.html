@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>残業時間計算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#4a4a68;--sub:#7d7d9c;
+    --blue:#7fb0e6;--blue-d:#5f8fcc;
+    --pink:#f6c3d6;--red:#e88f8f;
+    --glass-hi:rgba(255,255,255,.72);
+    --glass-lo:rgba(255,255,255,.22);
+    --glass-edge:rgba(255,255,255,.75);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh;color:var(--ink);overflow-x:hidden;
+    font-family:"LINE Seed JP","LINE Seed Sans",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background:linear-gradient(160deg,#fdeef6 0%,#f1ecff 45%,#e6f3fb 100%);
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(40px);z-index:-1;opacity:.75;pointer-events:none}
+  .b1{width:260px;height:260px;background:#f9c6dd;top:-60px;left:-70px}
+  .b2{width:300px;height:300px;background:#c9dcff;top:30%;right:-120px}
+  .b3{width:240px;height:240px;background:#c8f1e0;bottom:-40px;left:-40px}
+
+  .wrap{max-width:480px;margin:0 auto;padding:0 16px 130px}
+
+  h1.hdr{
+    margin:0 -16px 18px;padding:calc(env(safe-area-inset-top,0px) + 30px) 16px 18px;background:#f6cfd9;color:var(--ink);
+    font-family:"Zen Maru Gothic",sans-serif;font-size:19px;font-weight:700;letter-spacing:.05em;text-align:center;
+  }
+
+  /* リキッドガラス共通 */
+  .glass{
+    position:relative;
+    background:linear-gradient(135deg,var(--glass-hi) 0%,var(--glass-lo) 60%,rgba(255,255,255,.35) 100%);
+    backdrop-filter:blur(22px) saturate(180%);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+    border:1px solid var(--glass-edge);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      inset 0 -1px 1px rgba(255,255,255,.35),
+      0 10px 30px rgba(120,110,170,.18);
+  }
+  .glass::before{
+    content:"";position:absolute;left:8%;right:8%;top:0;height:45%;border-radius:inherit;
+    background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));
+    pointer-events:none;opacity:.6;
+  }
+  .card{border-radius:26px;padding:18px;margin-bottom:16px;overflow:hidden}
+  .card>*{position:relative}
+
+  .total{text-align:center;margin:56px 0 28px}
+  .label{font-size:17px;font-weight:600;color:var(--ink)}
+  .big{font-size:40px;font-weight:700;color:var(--blue-d);margin:6px 0 4px;text-shadow:0 1px 0 rgba(255,255,255,.9)}
+  .sub{font-size:13px;color:var(--sub)}
+  .sec-title{font-size:18px;color:var(--ink);text-align:center;margin:0 0 12px}
+  label.lbl{display:block;font-size:13px;color:var(--sub);margin:12px 0 6px}
+
+  input{
+    width:100%;padding:12px 14px;border-radius:16px;
+    border:1px solid rgba(255,255,255,.8);
+    background:rgba(255,255,255,.45);
+    box-shadow:inset 0 1px 3px rgba(120,110,170,.12),inset 0 0 0 1px rgba(255,255,255,.4);
+    font-size:16px;font-family:inherit;color:var(--ink);
+    -webkit-appearance:none;appearance:none;outline:none;
+  }
+  input:focus{background:rgba(255,255,255,.7);box-shadow:0 0 0 3px rgba(127,176,230,.35)}
+
+  .datebox{position:relative;border-radius:16px;overflow:hidden}
+  .datebox .shown{
+    display:flex;justify-content:center;align-items:center;position:relative;
+    padding:12px 14px;border-radius:16px;
+    background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.8);
+    box-shadow:inset 0 1px 3px rgba(120,110,170,.12),inset 0 0 0 1px rgba(255,255,255,.4);
+    font-size:16px;
+  }
+  .datebox .shown::after{content:"📅";font-size:18px;position:absolute;right:14px;top:50%;transform:translateY(-50%)}
+  .datebox input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+
+  .hmm{font-size:22px;font-weight:600;text-align:center;letter-spacing:.1em}
+  .hmm::placeholder{color:#c3c3d6;font-weight:400;opacity:1}
+  .preview{font-size:14px;color:var(--blue-d);margin-top:8px;text-align:right;min-height:20px}
+
+  button{font-family:inherit;cursor:pointer;margin:0}
+  button.primary{
+    width:100%;margin-top:18px;padding:15px;border-radius:18px;border:1px solid rgba(255,255,255,.7);
+    background:linear-gradient(180deg,#6d9fdb 0%,#4a7fc4 100%);
+    color:#fff;font-size:16px;font-weight:600;
+    text-shadow:0 1px 1px rgba(60,100,160,.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 8px 20px rgba(100,150,210,.35);
+    transition:transform .15s;
+  }
+  button.primary:active{transform:scale(.97)}
+
+  .monthrow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .mnav{width:auto;padding:6px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.55);color:var(--blue-d);font-size:14px;font-weight:600;box-shadow:0 2px 6px rgba(120,110,170,.15)}
+  .mpick{position:relative;cursor:pointer;border-radius:14px;padding:7px 14px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);font-size:15px;font-weight:600;min-width:120px;text-align:center}
+
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;justify-content:flex-start;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.7);font-size:15px}
+  li:last-child{border-bottom:none}
+  .date-txt{color:var(--sub);font-size:14px}
+  .time{
+    font-weight:600;font-size:14px;white-space:nowrap;padding:5px 12px;border-radius:999px;
+    background:none;
+    border:none;
+    box-shadow:none;
+  }
+  .del{background:none;border:none;color:var(--red);font-size:13px;padding:6px;width:auto;margin-left:auto}
+  li > span:last-child{display:contents !important}
+  .empty{text-align:center;color:var(--sub);font-size:14px;padding:14px 0}
+
+  #pages{position:relative;overflow:hidden}
+  .view{display:none}
+  .view.active{display:block}
+
+  nav.tabbar{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    width:min(360px,calc(100% - 32px));
+    border-radius:30px;padding:6px;display:flex;gap:6px;z-index:10;
+  }
+  nav.tabbar button{
+    flex:1;position:relative;z-index:1;background:none;border:none;color:var(--sub);
+    font-size:13px;padding:8px 0;border-radius:24px;width:auto;transition:all .25s ease;
+  }
+  nav.tabbar button .ic{display:block;font-size:19px;margin-bottom:1px}
+  nav.tabbar button.on{
+    color:var(--blue-d);font-weight:600;
+    background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.55));
+    box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(120,110,170,.2);
+  }
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(74,74,104,.25);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:30;padding:16px}
+  .sheet-bg.show{display:flex}
+  .sheet{width:min(420px,100%);border-radius:28px;padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+  .yrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .yrow span{font-size:18px;font-weight:700;color:var(--blue-d)}
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .mcell{width:auto;margin:0;padding:14px 0;border-radius:16px;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.45);font-size:15px;font-family:inherit;color:var(--ink);box-shadow:0 2px 6px rgba(120,110,170,.12)}
+  .mcell.cur{background:linear-gradient(180deg,#a9cdf5,#7fb0e6);color:#fff;font-weight:600}
+
+  .toast{
+    position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
+    padding:10px 20px;border-radius:999px;font-size:14px;color:var(--ink);white-space:nowrap;
+    opacity:0;transition:.3s;pointer-events:none;z-index:40;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<div class="wrap">
+  <h1 class="hdr">残業時間計算</h1>
+
+  <div class="total">
+    <div class="label" id="monthLabel">今月の合計残業時間</div>
+    <div class="big" id="monthTotal">0時間00分</div>
+    <div class="sub" id="monthSub">0.00 時間 ／ 0日</div>
+    <div class="sub" style="margin-top:10px">全期間の合計：<span id="allTotal">0時間00分</span></div>
+  </div>
+
+  <div id="pages">
+  <!-- 残業登録 -->
+  <section class="view active" id="view-register">
+    <div class="card glass">
+      <div class="sec-title">残業時間を入力</div>
+
+      <div class="datebox">
+        <div class="shown" id="dateText">2026年11月25日</div>
+        <input type="date" id="date" aria-label="日付を選択">
+      </div>
+
+      <input type="text" id="hmm" class="hmm" inputmode="numeric" placeholder="0:00" maxlength="5" autocomplete="off" style="margin-top:12px">
+      <div class="preview" id="preview"></div>
+
+      <button class="primary" id="saveBtn">登録する</button>
+    </div>
+  </section>
+
+  <!-- 入力一覧 -->
+  <section class="view" id="view-list">
+    <div class="card glass">
+      <div class="monthrow">
+        <button class="mnav" id="prevM" aria-label="前の月">◀</button>
+        <div class="mpick" id="openPick" role="button" tabindex="0"><span id="monthText"></span></div>
+        <button class="mnav" id="nextM" aria-label="次の月">▶</button>
+      </div>
+      <ul id="list"></ul>
+      <div class="empty" id="emptyMsg" style="display:none">この月の記録はまだありません</div>
+    </div>
+  </section>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet glass">
+    <div class="yrow">
+      <button class="mnav" id="prevY" aria-label="前の年">◀</button>
+      <span id="yearText"></span>
+      <button class="mnav" id="nextY" aria-label="次の年">▶</button>
+    </div>
+    <div class="mgrid" id="mgrid"></div>
+  </div>
+</div>
+
+<nav class="tabbar glass">
+  <button class="on" data-tab="register">残業登録</button>
+  <button data-tab="list">入力一覧</button>
+</nav>
+
+<div class="toast glass" id="toast"></div>
+
+<input type="hidden" id="month">
+
+<script>
+(function(){
+  var KEY = "overtime-log-v1";
+  var data = {};
+  var pickYear = 2026;
+  var $ = function(id){ return document.getElementById(id); };
+  var WD = ["日","月","火","水","木","金","土"];
+
+  function load(){
+    try { data = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }
+    catch(e){ data = {}; }
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){}
+  }
+  function p2(n){ return String(n).padStart(2, "0"); }
+  function ymd(d){ return d.getFullYear() + "-" + p2(d.getMonth()+1) + "-" + p2(d.getDate()); }
+  function fmt(min){ return Math.floor(min/60) + "時間" + p2(min % 60) + "分"; }
+  function jpDate(k){
+    var p = k.split("-");
+    var wd = WD[new Date(k + "T00:00:00").getDay()];
+    return parseInt(p[0],10) + "年" + parseInt(p[1],10) + "月" + parseInt(p[2],10) + "日(" + wd + ")";
+  }
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove("show"); }, 1600);
+  }
+
+  function parseHmm(s){
+    s = (s || "").trim();
+    if (s === "") return { ok:true, min:0 };
+    var h, m;
+    if (/^\d{1,2}:\d{1,2}$/.test(s)){
+      var sp = s.split(":"); h = parseInt(sp[0],10); m = parseInt(sp[1],10);
+    } else if (/^\d{1,4}$/.test(s)){
+      var n = parseInt(s,10); h = Math.floor(n/100); m = n % 100;
+    } else {
+      return { ok:false, msg:"数字で入力してください" };
+    }
+    if (m >= 60) return { ok:false, msg:"分は59まで入力してください" };
+    var min = h*60 + m;
+    if (min > 24*60) return { ok:false, msg:"時間が大きすぎます" };
+    return { ok:true, min:min };
+  }
+  function hmmFromMin(min){
+    if (!min) return "";
+    return String(Math.floor(min/60)*100 + (min % 60));
+  }
+
+  function showTab(name){
+    document.querySelectorAll(".view").forEach(function(v){
+      v.classList.toggle("active", v.id === "view-" + name);
+    });
+    document.querySelectorAll("nav.tabbar button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === name);
+    });
+    window.scrollTo(0, 0);
+    if (name === "list") render();
+  }
+
+  function updatePreview(){
+    var r = parseHmm($("hmm").value);
+    var el = $("preview");
+    if (!r.ok){ el.textContent = r.msg; el.style.color = "#d46a6a"; }
+    else { el.style.color = ""; el.textContent = r.min ? "→ " + fmt(r.min) : ""; }
+  }
+
+  function setDate(d){
+    $("date").value = d;
+    $("dateText").textContent = jpDate(d);
+    $("hmm").value = hmmFromMin(data[d] || 0);
+    updatePreview();
+  }
+
+  function register(){
+    var d = $("date").value;
+    if (!d){ toast("日付を選んでください"); return; }
+    var r = parseHmm($("hmm").value);
+    if (!r.ok){ toast(r.msg); return; }
+    if (r.min === 0){
+      delete data[d];
+      toast("その日の記録を消しました");
+    } else {
+      data[d] = r.min;
+      toast("登録しました");
+    }
+    save();
+    render();
+  }
+
+  function remove(d){
+    delete data[d];
+    save();
+    render();
+    toast("削除しました");
+  }
+
+  function drawPicker(){
+    $("yearText").textContent = pickYear + "年";
+    var cur = $("month").value;
+    var g = $("mgrid");
+    g.innerHTML = "";
+    for (var m = 1; m <= 12; m++){
+      (function(m){
+        var v = pickYear + "-" + p2(m);
+        var b = document.createElement("button");
+        b.className = "mcell" + (v === cur ? " cur" : "");
+        b.textContent = m + "月";
+        b.addEventListener("click", function(){
+          $("month").value = v;
+          $("sheetBg").classList.remove("show");
+          render();
+        });
+        g.appendChild(b);
+      })(m);
+    }
+  }
+  function openPicker(){
+    pickYear = parseInt($("month").value.split("-")[0], 10);
+    drawPicker();
+    $("sheetBg").classList.add("show");
+  }
+
+  function shiftMonth(delta){
+    var p = $("month").value.split("-");
+    var d = new Date(parseInt(p[0],10), parseInt(p[1],10) - 1 + delta, 1);
+    $("month").value = d.getFullYear() + "-" + p2(d.getMonth()+1);
+    render();
+  }
+
+  function render(){
+    var month = $("month").value;
+    var keys = Object.keys(data).sort();
+    var monthKeys = keys.filter(function(k){ return k.indexOf(month) === 0; });
+
+    var monthSum = 0; monthKeys.forEach(function(k){ monthSum += data[k]; });
+    var allSum = 0; keys.forEach(function(k){ allSum += data[k]; });
+
+    var yy = month.split("-");
+    $("monthText").textContent = yy[0] + "年" + parseInt(yy[1], 10) + "月";
+    var mo = parseInt(yy[1], 10);
+    $("monthLabel").textContent = (mo ? mo + "月の合計残業時間" : "合計残業時間");
+    $("monthTotal").textContent = fmt(monthSum);
+    $("monthSub").textContent = (monthSum/60).toFixed(2) + " 時間 ／ " + monthKeys.length + "日";
+    $("allTotal").textContent = fmt(allSum);
+
+    var list = $("list");
+    list.innerHTML = "";
+    $("emptyMsg").style.display = monthKeys.length === 0 ? "" : "none";
+
+    monthKeys.forEach(function(k){
+      var li = document.createElement("li");
+      var left = document.createElement("span");
+      left.className = "date-txt";
+      left.textContent = jpDate(k);
+
+      var right = document.createElement("span");
+      right.style.display = "flex";
+      right.style.alignItems = "center";
+      right.style.gap = "6px";
+
+      var t = document.createElement("span");
+      t.className = "time";
+      t.textContent = fmt(data[k]);
+
+      var del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "削除";
+      del.addEventListener("click", function(){ remove(k); });
+
+      right.appendChild(t);
+      right.appendChild(del);
+      li.appendChild(left);
+      li.appendChild(right);
+      list.appendChild(li);
+    });
+  }
+
+  function init(){
+    load();
+    var now = new Date();
+    $("month").value = ymd(now).slice(0,7);
+    setDate(ymd(now));
+    render();
+
+    $("date").addEventListener("change", function(){ setDate(this.value); });
+    $("hmm").addEventListener("input", updatePreview);
+    $("saveBtn").addEventListener("click", register);
+    $("prevM").addEventListener("click", function(){ shiftMonth(-1); });
+    $("nextM").addEventListener("click", function(){ shiftMonth(1); });
+    $("openPick").addEventListener("click", openPicker);
+    $("prevY").addEventListener("click", function(){ pickYear--; drawPicker(); });
+    $("nextY").addEventListener("click", function(){ pickYear++; drawPicker(); });
+    $("sheetBg").addEventListener("click", function(e){ if (e.target === this) this.classList.remove("show"); });
+    document.querySelectorAll("nav.tabbar button").forEach(function(b){
+      b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
+    });
+  }
+
+  init();
+  initSwipe();
+
+  function initSwipe(){
+    var pages = $("pages");
+    var started = false, mode = null, sx = 0, sy = 0, dx = 0, W = 0;
+    var EXCL = "input,select,textarea,button,label";
+    function view(n){ return $("view-" + n); }
+    function cur(){ return $("view-list").classList.contains("active") ? "list" : "register"; }
+    function clear(el){
+      el.style.display = ""; el.style.transition = ""; el.style.transform = "";
+      el.style.position = ""; el.style.top = ""; el.style.left = ""; el.style.right = "";
+    }
+
+    pages.addEventListener("touchstart", function(e){
+      if (e.target.closest && e.target.closest(EXCL)) { started = false; return; }
+      if (e.touches.length !== 1) { started = false; return; }
+      started = true; mode = null; dx = 0; W = pages.offsetWidth;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, {passive:true});
+
+    pages.addEventListener("touchmove", function(e){
+      if (!started) return;
+      var ddx = e.touches[0].clientX - sx, ddy = e.touches[0].clientY - sy;
+      if (mode === null){
+        if (Math.abs(ddx) < 8 && Math.abs(ddy) < 8) return;
+        mode = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
+        if (mode === "v"){ started = false; return; }
+      }
+      e.preventDefault();
+      dx = ddx;
+      var c = cur(), goTo = dx < 0 ? "list" : "register";
+      var curEl = view(c), other = (goTo === c) ? null : view(goTo);
+      var off = dx < 0 ? W : -W;
+      curEl.style.display = "block";
+      curEl.style.transition = "none";
+      curEl.style.transform = "translateX(" + (other ? dx : dx * 0.3) + "px)";
+      if (other){
+        other.style.display = "block";
+        other.style.position = "absolute";
+        other.style.top = "0"; other.style.left = "0"; other.style.right = "0";
+        other.style.transition = "none";
+        other.style.transform = "translateX(" + (dx + off) + "px)";
+      }
+    }, {passive:false});
+
+    pages.addEventListener("touchend", function(){
+      if (!started || mode !== "h"){ started = false; return; }
+      started = false;
+      var c = cur(), goTo = dx < 0 ? "list" : "register";
+      var commit = (goTo !== c) && Math.abs(dx) > W * 0.25;
+      var target = commit ? goTo : c;
+      var off = dx < 0 ? W : -W;
+      var curEl = view(c), tgt = view(target);
+      curEl.style.transition = "transform .25s ease";
+      if (commit){
+        curEl.style.transform = "translateX(" + (-off) + "px)";
+        tgt.style.transition = "transform .25s ease";
+        tgt.style.transform = "translateX(0)";
+      } else {
+        curEl.style.transform = "translateX(0)";
+        if (goTo !== c){
+          var oth = view(goTo);
+          oth.style.transition = "transform .25s ease";
+          oth.style.transform = "translateX(" + off + "px)";
+        }
+      }
+      setTimeout(function(){
+        clear(view("register")); clear(view("list"));
+        showTab(target);
+      }, 260);
+    });
+  }
+})();
+</script>
+</body>
+</html>
