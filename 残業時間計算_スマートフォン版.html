@@ -121,6 +121,9 @@
   .view{display:none}
   .view.active{display:block}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+  .total.pop{animation:pop .5s ease}
+  button.primary.done{background:linear-gradient(180deg,#86d3a8 0%,#55b587 100%);transition:background .2s}
   .view.fade{animation:fadeIn .45s ease}
 
   nav.tabbar{
@@ -318,9 +321,22 @@
     } else {
       data[d] = r.min;
       toast("登録しました");
+      celebrate();
     }
     save();
     render();
+  }
+
+  function celebrate(){
+    var b = $("saveBtn");
+    b.textContent = "✓ 登録しました";
+    b.classList.add("done");
+    setTimeout(function(){
+      b.textContent = "登録する";
+      b.classList.remove("done");
+    }, 1500);
+    var t = document.querySelector(".total");
+    t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop");
   }
 
   function remove(d){
@@ -363,10 +379,16 @@
     render();
   }
 
+  function periodOf(k){
+    var p = k.split("-"), y = parseInt(p[0],10), m = parseInt(p[1],10), d = parseInt(p[2],10);
+    if (d >= 11){ m++; if (m > 12){ m = 1; y++; } }
+    return y + "-" + p2(m);
+  }
+
   function render(){
     var month = $("month").value;
     var keys = Object.keys(data).sort();
-    var monthKeys = keys.filter(function(k){ return k.indexOf(month) === 0; });
+    var monthKeys = keys.filter(function(k){ return periodOf(k) === month; });
 
     var monthSum = 0; monthKeys.forEach(function(k){ monthSum += data[k]; });
     var allSum = 0; keys.forEach(function(k){ allSum += data[k]; });
@@ -416,7 +438,7 @@
   function init(){
     load();
     var now = new Date();
-    $("month").value = ymd(now).slice(0,7);
+    $("month").value = periodOf(ymd(now));
     setDate(ymd(now));
     render();
 
